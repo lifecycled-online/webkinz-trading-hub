@@ -3,10 +3,10 @@ const params = new URLSearchParams(window.location.search);
 const collection = params.get("collection");
 const category = params.get("category");
 
-const jsonFile = `../data/items/${collection}-items/${category}-items.json`;
+const jsonFile = `data/items/${collection}-items/${category}-items.json`;
 
 document.getElementById("category-name").textContent = category;
-fetch(`../data/collections/${collection}-collections.json`)
+fetch(`data/collections/${collection}-collections.json`)
     .then(response => response.json())
     .then(collections => {
         const currentCollection = collections.find(item => item.id === category);

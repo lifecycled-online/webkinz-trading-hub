@@ -1,8 +1,8 @@
 const collections = [
-    { name: "color", file: "../data/collections/color-collections.json" },
-    { name: "misc", file: "../data/collections/misc-collections.json" },
-    { name: "theme", file: "../data/collections/theme-collections.json" },
-    { name: "type", file: "../data/collections/type-collections.json" }
+    { name: "color", file: "data/collections/color-collections.json" },
+    { name: "misc", file: "data/collections/misc-collections.json" },
+    { name: "theme", file: "data/collections/theme-collections.json" },
+    { name: "type", file: "data/collections/type-collections.json" }
 ];
 
 const ITEMS_PER_PAGE = 50;
@@ -18,7 +18,7 @@ async function loadAllItems() {
             const categories = await response.json();
 
             const itemPromises = categories.map(async category => {
-                const itemFile = `../data/items/${collection.name}-items/${category.id}-items.json`;
+                const itemFile = `data/items/${collection.name}-items/${category.id}-items.json`;
                 const response = await fetch(itemFile);
                 return await response.json();
             });

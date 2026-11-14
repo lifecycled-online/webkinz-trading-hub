@@ -42,7 +42,7 @@ function loadCollection(jsonFile, collectiontype) {
     .catch(error => console.error(`Error loading collection: ${jsonFile}`, error));
 }
 
-loadCollection('../data/collections/type-collections.json', 'type');
-loadCollection('../data/collections/theme-collections.json', 'theme');
-loadCollection('../data/collections/color-collections.json', 'color');
-loadCollection('../data/collections/misc-collections.json', 'misc');
+loadCollection('data/collections/type-collections.json', 'type');
+loadCollection('data/collections/theme-collections.json', 'theme');
+loadCollection('data/collections/color-collections.json', 'color');
+loadCollection('data/collections/misc-collections.json', 'misc');
