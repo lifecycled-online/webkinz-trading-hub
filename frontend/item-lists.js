@@ -1,7 +1,6 @@
 import { userManager } from "./oidc-client.js";
 
-const apiBaseUrl = new URL(window.location.origin);
-apiBaseUrl.port = "3002";
+const apiBaseUrl = new URL("https://webkinz-trading-hub.onrender.com");
 
 async function requestListApi(path, method = "GET") {
     const user = await userManager.getUser();

@@ -76,10 +76,7 @@ async function updateAccountControls() {
 
         accountButtons.append(accountName, logoutButton);
 
-        const apiUrl = new URL(window.location.origin);
-        apiUrl.port = "3002";
-        apiUrl.pathname = "/api/me";
-        apiUrl.search = "";
+        const apiUrl = new URL("https://webkinz-trading-hub.onrender.com/api/me");
         const apiResponse = await fetch(apiUrl, {
             headers: { Authorization: `Bearer ${user.access_token}` },
         });
