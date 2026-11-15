@@ -1,12 +1,11 @@
-import { redirectToLogin, requireAuthenticatedUser, userManager } from "./oidc-client.js";
+import { AuthenticationRequiredError, renderLoginPrompt, requireAuthenticatedUser, userManager } from "./oidc-client.js";
 
 const apiBaseUrl = new URL("https://webkinz-trading-hub.onrender.com");
 
-async function requestListApi(path, method = "GET", redirectIfUnauthorized = false) {
+async function requestListApi(path, method = "GET") {
     const user = await userManager.getUser();
     if (!user || user.expired || !user.access_token) {
-        if (method !== "GET") await redirectToLogin();
-        throw new Error("Sign in to manage your item lists.");
+        throw new AuthenticationRequiredError();
     }
 
     const response = await fetch(new URL(path, apiBaseUrl), {
@@ -14,8 +13,7 @@ async function requestListApi(path, method = "GET", redirectIfUnauthorized = fal
         headers: { Authorization: `Bearer ${user.access_token}` },
     });
     if (response.status === 401) {
-        if (method !== "GET") await redirectToLogin();
-        if (redirectIfUnauthorized) throw new Error("Sign in to manage your item lists.");
+        throw new AuthenticationRequiredError();
     }
     if (!response.ok) {
         throw new Error(`Item list request failed with status ${response.status}`);
@@ -24,8 +22,8 @@ async function requestListApi(path, method = "GET", redirectIfUnauthorized = fal
     return response;
 }
 
-export async function loadItemLists({ redirectIfUnauthorized = false } = {}) {
-    const response = await requestListApi("/api/me/lists", "GET", redirectIfUnauthorized);
+export async function loadItemLists() {
+    const response = await requestListApi("/api/me/lists");
     return response.json();
 }
 
@@ -49,6 +47,8 @@ export function createItemListControls(item, lists, onChange = () => {}) {
         const label = document.createElement("label");
         label.setAttribute("for", checkbox.id);
         label.title = labelText;
+        const loginPrompt = document.createElement("span");
+        loginPrompt.hidden = true;
 
         checkbox.addEventListener("change", async () => {
             const checked = checkbox.checked;
@@ -60,16 +60,21 @@ export function createItemListControls(item, lists, onChange = () => {}) {
                 const itemIds = lists[listType];
                 if (checked && !itemIds.includes(item.id)) itemIds.push(item.id);
                 if (!checked) lists[listType] = itemIds.filter((itemId) => itemId !== item.id);
+                loginPrompt.hidden = true;
                 onChange(listType, checked);
             } catch (error) {
                 checkbox.checked = !checked;
+                if (error instanceof AuthenticationRequiredError) {
+                    loginPrompt.hidden = false;
+                    renderLoginPrompt(loginPrompt, "Log in to update your list. ");
+                }
                 console.error("Unable to save item list change:", error.message);
             } finally {
                 checkbox.disabled = false;
             }
         });
 
-        control.append(checkbox, label);
+        control.append(checkbox, label, loginPrompt);
         container.append(control);
     }
 

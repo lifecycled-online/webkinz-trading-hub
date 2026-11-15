@@ -644,6 +644,18 @@ main > nav.card {
     display: none;
 }
 
+.login-prompt-link {
+    color: #176b71;
+    font-weight: 700;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+.login-prompt-link:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 3px;
+}
+
 .saved-list-panel .item-card {
     margin: 0 8px 18px;
     text-align: center;

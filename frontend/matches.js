@@ -1,4 +1,4 @@
-import { redirectToLogin, requireAuthenticatedUser } from "./oidc-client.js";
+import { AuthenticationRequiredError, renderLoginPrompt, requireAuthenticatedUser } from "./oidc-client.js";
 
 const apiBaseUrl = new URL("https://webkinz-trading-hub.onrender.com");
 const collections = [
@@ -46,8 +46,7 @@ async function loadMatches(user) {
         headers: { Authorization: `Bearer ${user.access_token}` },
     });
     if (response.status === 401) {
-        await redirectToLogin();
-        throw new Error("Redirecting to sign in.");
+        throw new AuthenticationRequiredError();
     }
     if (!response.ok) throw new Error("Matches could not be loaded. Please try again later.");
     return (await response.json()).matches;
@@ -179,7 +178,11 @@ async function initialize() {
         console.error("Unable to load trade matches:", error.message);
         matchCount.textContent = "Matches unavailable";
         status.hidden = false;
-        status.textContent = error.message;
+        if (error instanceof AuthenticationRequiredError) {
+            renderLoginPrompt(status, "Log in to find trade matches. ");
+        } else {
+            status.textContent = error.message;
+        }
     } finally {
         refreshButton.disabled = false;
     }
@@ -216,8 +219,7 @@ offerForm.addEventListener("submit", async (event) => {
             }),
         });
         if (response.status === 401) {
-            await redirectToLogin();
-            throw new Error("Redirecting to sign in.");
+            throw new AuthenticationRequiredError();
         }
         const result = await response.json().catch(() => ({}));
         if (!response.ok) throw new Error(result.error || "The offer could not be sent.");
@@ -230,7 +232,11 @@ offerForm.addEventListener("submit", async (event) => {
         offersLink.textContent = "View offers";
         status.append(offersLink);
     } catch (error) {
-        offerStatus.textContent = error.message;
+        if (error instanceof AuthenticationRequiredError) {
+            renderLoginPrompt(offerStatus, "Log in to send this trade offer. ");
+        } else {
+            offerStatus.textContent = error.message;
+        }
     } finally {
         sendOfferButton.disabled = false;
     }
