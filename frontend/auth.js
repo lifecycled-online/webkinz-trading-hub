@@ -4,51 +4,16 @@ const accountButtons = document.querySelector("#accountButtons");
 const loginButton = document.querySelector("#loginButton");
 const registerButton = document.querySelector("#registerButton");
 
-const dialog = document.createElement("dialog");
-dialog.className = "auth-dialog";
-dialog.setAttribute("aria-labelledby", "auth-title");
-dialog.innerHTML = `
-    <form id="sso-form">
-        <h2 id="auth-title">Continue with SSO</h2>
-        <label for="sso-email">Email</label>
-        <input id="sso-email" name="email" type="email" autocomplete="email" required maxlength="254">
-        <p id="sso-error" role="alert" aria-live="polite"></p>
-        <div class="auth-dialog-actions">
-            <button id="sso-close" class="headerButton" type="button">Cancel</button>
-            <button id="sso-submit" class="headerButton" type="submit">Continue with SSO</button>
-        </div>
-    </form>
-`;
-document.body.append(dialog);
-
-const form = dialog.querySelector("#sso-form");
-const emailInput = dialog.querySelector("#sso-email");
-const errorMessage = dialog.querySelector("#sso-error");
-const submitButton = dialog.querySelector("#sso-submit");
-
-function showDialog() {
-    errorMessage.textContent = "";
-    dialog.showModal();
-    emailInput.focus();
-}
-
-loginButton?.addEventListener("click", showDialog);
-registerButton?.addEventListener("click", showDialog);
-dialog.querySelector("#sso-close").addEventListener("click", () => dialog.close());
-
-form.addEventListener("submit", async (event) => {
-    event.preventDefault();
-    errorMessage.textContent = "";
-    submitButton.disabled = true;
-
+async function startSignIn() {
     try {
-        await redirectToLogin(emailInput.value.trim());
+        await redirectToLogin();
     } catch (error) {
         console.error("Unable to start SSO sign-in:", error);
-        errorMessage.textContent = "Sign-in could not be started. Please try again.";
-        submitButton.disabled = false;
     }
-});
+}
+
+loginButton?.addEventListener("click", startSignIn);
+registerButton?.addEventListener("click", startSignIn);
 
 async function updateAccountControls() {
     try {
