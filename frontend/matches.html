@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Webkinz Trading Hub - Matches</title>
+        <link rel="stylesheet" href="styles.css">
+        <script type="module" src="matches.js"></script>
+    </head>
+    <body>
+        <div class="site-background-items" aria-hidden="true">
+            <img class="site-item item-blue-one" src="https://static.wikitide.net/webkinzguidewiki/b/bc/Bluebutterflybed.png" alt="">
+            <img class="site-item item-blue-two" src="https://static.wikitide.net/webkinzguidewiki/a/a1/Blueavenuebed.png" alt="">
+            <img class="site-item item-pink-one" src="https://static.wikitide.net/webkinzguidewiki/d/d8/Ballerinabed.png" alt="">
+            <img class="site-item item-pink-two" src="https://static.wikitide.net/webkinzguidewiki/9/92/Cherryblossombed.png" alt="">
+            <img class="site-item item-yellow-one" src="https://static.wikitide.net/webkinzguidewiki/8/8d/Daffodilbed.png" alt="">
+            <img class="site-item item-yellow-two" src="https://static.wikitide.net/webkinzguidewiki/1/17/Plushgiraffebed.png" alt="">
+        </div>
+        <header>
+            <div class="pageTitle">
+                <h1><a style="text-decoration: none;" href="index.html">Webkinz Trading Hub</a></h1>
+                <h2>Find traders whose inventory and wishlist line up with yours.</h2>
+            </div>
+            <div id="accountButtons">
+                <button id="loginButton" class="headerButton" type="button">Login</button>
+                <button id="registerButton" class="headerButton" type="button">Register</button>
+            </div>
+        </header>
+        <main>
+            <nav class="site-nav" aria-label="Main navigation">
+                <a href="index.html">Home</a>
+                <a href="collections.html">Browse</a>
+                <a href="all-items.html">All Items</a>
+                <a href="inventory.html">Inventory</a>
+                <a href="wishlist.html">Wishlist</a>
+                <a class="active" href="matches.html" aria-current="page">Matches</a>
+            </nav>
+            <section class="matches-panel" aria-labelledby="matches-title">
+                <div class="matches-heading">
+                    <div>
+                        <h2 id="matches-title">Trade matches</h2>
+                        <p id="matches-count" aria-live="polite">Finding matches...</p>
+                    </div>
+                    <button id="refresh-matches" class="matches-refresh" type="button">Refresh</button>
+                </div>
+                <p id="matches-status" class="matches-status" role="status" aria-live="polite">Loading your matches...</p>
+                <div id="matches-list" class="matches-list"></div>
+            </section>
+        </main>
+        <script type="module" src="auth.js"></script>
+    </body>
+</html>
