@@ -6,17 +6,65 @@
 }
 
 body {
-    background: #FFF9F5; 
+    background: #FFF9F5;
     margin: 0;
+    isolation: isolate;
+    position: relative;
+}
+
+.site-background-pets {
+    position: fixed;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: -1;
+}
+
+.site-pet {
+    position: absolute;
+    width: clamp(80px, 12vw, 150px);
+    height: auto;
+    opacity: 0.18;
+    filter: drop-shadow(0 5px 12px rgba(167, 107, 126, 0.2));
+}
+
+.site-pet-yellow {
+    top: 34vh;
+    left: 1vw;
+}
+
+.site-pet-blue {
+    top: 63vh;
+    right: 1vw;
+}
+
+.site-pet-pink {
+    top: 86vh;
+    left: 3vw;
 }
 
 header {
+    --quilt-ink: #814c5d;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background: #a2d1ec;
+    gap: 30px;
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    background: #f8dce2;
     padding: 0 50px;
     border-radius: 0 0 50px 50px;
+}
+
+.pageTitle h1 a {
+    color: var(--quilt-ink);
+    -webkit-text-fill-color: currentColor;
+    filter: none;
+}
+
+.pageTitle h2 {
+    color: var(--quilt-ink);
 }
 
 main {
@@ -26,43 +74,27 @@ main {
 .headerButton {
     width: 140px;
     height: 60px;
-    background-color: #FFF;
+    color: var(--quilt-ink);
+    background: #fff0f3;
     border-radius: 100px;
-    border: none;
+    border: 1px solid #e8bec8;
     position: relative;
     z-index: 1;
     font-size: 1.2em;
+    box-shadow: 0 3px 8px rgba(167, 107, 126, 0.12);
     transition: transform 0.2s ease;
 }
 
-.headerButton::before {
-    content: "";
-    width: 60px;
-    height: 60px;
-    border-radius: 50%;
-    background-color: #FFF;
-    top: -15px;
-    left: 5px;
-    position: absolute;
-    z-index: -1;
-}
-
+.headerButton::before,
 .headerButton::after {
-    content: "";
-    width: 90px;
-    height: 90px;
-    border-radius: 50%;
-    background-color: #FFF;
-    top: -30px;
-    left: 40px;
-    position: absolute;
-    z-index: -1;
+    display: none;
 }
 
 .headerButton:hover {
     cursor: pointer;
-    transform: rotate(5deg);
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    transform: translateY(-3px);
+    background: #fff7f8;
+    box-shadow: 0 6px 14px rgba(167, 107, 126, 0.2);
 }
 
 .headerButton:active {
@@ -74,6 +106,87 @@ main {
     gap: 50px;
     justify-content: space-evenly;
     flex-wrap: wrap;
+}
+
+.cards .card {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    color: var(--quilt-ink);
+    background: var(--quilt-base);
+    border: 3px dashed var(--quilt-thread);
+    border-radius: 22px;
+    box-shadow: 0 0 0 5px rgba(255, 255, 255, 0.62), 0 12px 28px rgba(167, 107, 126, 0.18);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.cards .card.yellow {
+    --quilt-base: #fff0c7;
+    --quilt-patch-light: #fff8df;
+    --quilt-patch-dark: #f5e4ad;
+    --quilt-thread: #fffdf2;
+    --quilt-accent: #c6a45a;
+    --quilt-ink: #705b30;
+}
+
+.cards .card.pink {
+    --quilt-base: #f8dce2;
+    --quilt-patch-light: #fdeef0;
+    --quilt-patch-dark: #f6d2d9;
+    --quilt-thread: #fffafa;
+    --quilt-accent: #d991a1;
+    --quilt-ink: #814c5d;
+}
+
+.cards .card.blue {
+    --quilt-base: #dceefa;
+    --quilt-patch-light: #eef8ff;
+    --quilt-patch-dark: #cce3f3;
+    --quilt-thread: #fff9fa;
+    --quilt-accent: #7baac8;
+    --quilt-ink: #42677f;
+}
+
+.cards .card::before,
+.cards .card::after {
+    content: "";
+    position: absolute;
+    pointer-events: none;
+    z-index: 0;
+}
+
+.cards .card::before {
+    inset: 12px;
+    border-radius: 14px;
+    opacity: 0.75;
+    background:
+        linear-gradient(90deg, transparent calc(100% - 1px), rgba(255, 255, 255, 0.62) 0) 0 0 / 76px 76px,
+        linear-gradient(transparent calc(100% - 1px), rgba(255, 255, 255, 0.62) 0) 0 0 / 76px 76px,
+        repeating-conic-gradient(var(--quilt-patch-light) 0% 25%, var(--quilt-patch-dark) 0% 50%) 0 0 / 76px 76px;
+}
+
+.cards .card::after {
+    inset: 8px;
+    border: 1px dashed var(--quilt-thread);
+    border-radius: 16px;
+}
+
+.cards .card > * {
+    position: relative;
+    z-index: 1;
+}
+
+.cards .card p {
+    color: var(--quilt-ink);
+}
+
+.cards .card a {
+    color: var(--quilt-ink);
+}
+
+.cards .card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 0 0 5px rgba(255, 255, 255, 0.72), 0 16px 32px rgba(167, 107, 126, 0.24);
 }
 
 .card {
@@ -94,6 +207,39 @@ main {
 .card a:hover {
     cursor: pointer;
     text-decoration: underline;
+}
+
+.cards .card h2 {
+    margin: 0.25em 0 0.85em;
+    padding: 0.65em 0.8em;
+    color: var(--quilt-ink);
+    border: 2px dashed var(--quilt-accent);
+    border-radius: 14px;
+    background: rgba(255, 250, 250, 0.72);
+    box-shadow: inset 0 0 0 3px rgba(255, 255, 255, 0.48), 0 4px 14px rgba(167, 107, 126, 0.12);
+    text-shadow: 0 1px rgba(255, 255, 255, 0.75);
+    position: relative;
+}
+
+.cards .card h2::before,
+.cards .card h2::after {
+    color: var(--quilt-accent);
+    content: "\273f";
+    display: inline-block;
+    font-size: 0.7em;
+    position: absolute;
+    text-shadow: 0 1px 4px rgba(255, 255, 255, 0.95);
+    top: 50%;
+    vertical-align: 0.12em;
+    transform: translateY(-50%);
+}
+
+.cards .card h2::before {
+    left: 0.25em;
+}
+
+.cards .card h2::after {
+    right: 0.25em;
 }
 
 .blue {
@@ -315,4 +461,31 @@ main {
     margin: auto;
     display: flex;
     justify-content: space-around;
+}
+
+@media (max-width: 700px) {
+    header {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 10px;
+        padding: 12px 24px 28px;
+    }
+
+    .pageTitle h1 {
+        font-size: clamp(1.7rem, 8vw, 2.4rem);
+    }
+
+    .pageTitle h2 {
+        font-size: 1rem;
+    }
+
+    #accountButtons {
+        align-self: flex-end;
+        display: flex;
+        gap: 20px;
+    }
+
+    .headerButton {
+        width: 110px;
+    }
 }
