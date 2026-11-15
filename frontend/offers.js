@@ -1,4 +1,4 @@
-import { userManager } from "./oidc-client.js";
+import { redirectToLogin, requireAuthenticatedUser } from "./oidc-client.js";
 
 const apiBaseUrl = new URL("https://webkinz-trading-hub.onrender.com");
 const collections = [
@@ -17,12 +17,15 @@ let offers = [];
 let itemsById = new Map();
 
 async function requestApi(path, options = {}) {
-    const user = await userManager.getUser();
-    if (!user || user.expired || !user.access_token) throw new Error("Sign in to manage trade offers.");
+    const user = await requireAuthenticatedUser();
 
     const headers = { Authorization: `Bearer ${user.access_token}` };
     if (options.body) headers["Content-Type"] = "application/json";
     const response = await fetch(new URL(path, apiBaseUrl), { ...options, headers });
+    if (response.status === 401) {
+        await redirectToLogin();
+        throw new Error("Redirecting to sign in.");
+    }
     const result = await response.json().catch(() => ({}));
     if (!response.ok) throw new Error(result.error || "Trade offers are unavailable.");
     return result;

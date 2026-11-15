@@ -1,4 +1,4 @@
-import { userManager } from "./oidc-client.js";
+import { redirectToLogin, requireAuthenticatedUser } from "./oidc-client.js";
 
 const apiBaseUrl = new URL("https://webkinz-trading-hub.onrender.com");
 const collections = [
@@ -45,7 +45,10 @@ async function loadMatches(user) {
     const response = await fetch(new URL("/api/me/matches", apiBaseUrl), {
         headers: { Authorization: `Bearer ${user.access_token}` },
     });
-    if (response.status === 401) throw new Error("Your sign-in has expired. Please sign in again.");
+    if (response.status === 401) {
+        await redirectToLogin();
+        throw new Error("Redirecting to sign in.");
+    }
     if (!response.ok) throw new Error("Matches could not be loaded. Please try again later.");
     return (await response.json()).matches;
 }
@@ -167,10 +170,7 @@ async function initialize() {
     matchCount.textContent = "Finding matches...";
 
     try {
-        const user = await userManager.getUser();
-        if (!user || user.expired || !user.access_token) {
-            throw new Error("Sign in to find trade matches.");
-        }
+        const user = await requireAuthenticatedUser();
 
         const [catalog, matches] = await Promise.all([loadCatalog(), loadMatches(user)]);
         itemsById = catalog;
@@ -199,8 +199,7 @@ offerForm.addEventListener("submit", async (event) => {
     sendOfferButton.disabled = true;
     offerStatus.textContent = "Sending offer...";
     try {
-        const user = await userManager.getUser();
-        if (!user || user.expired || !user.access_token) throw new Error("Sign in to send trade offers.");
+        const user = await requireAuthenticatedUser();
         const response = await fetch(new URL("/api/me/offers", apiBaseUrl), {
             method: "POST",
             headers: {
@@ -216,6 +215,10 @@ offerForm.addEventListener("submit", async (event) => {
                 contactValue: offerForm.elements.contactValue.value.trim(),
             }),
         });
+        if (response.status === 401) {
+            await redirectToLogin();
+            throw new Error("Redirecting to sign in.");
+        }
         const result = await response.json().catch(() => ({}));
         if (!response.ok) throw new Error(result.error || "The offer could not be sent.");
 

@@ -1,10 +1,11 @@
-import { userManager } from "./oidc-client.js";
+import { redirectToLogin, requireAuthenticatedUser, userManager } from "./oidc-client.js";
 
 const apiBaseUrl = new URL("https://webkinz-trading-hub.onrender.com");
 
-async function requestListApi(path, method = "GET") {
+async function requestListApi(path, method = "GET", redirectIfUnauthorized = false) {
     const user = await userManager.getUser();
     if (!user || user.expired || !user.access_token) {
+        if (method !== "GET") await redirectToLogin();
         throw new Error("Sign in to manage your item lists.");
     }
 
@@ -12,6 +13,10 @@ async function requestListApi(path, method = "GET") {
         method,
         headers: { Authorization: `Bearer ${user.access_token}` },
     });
+    if (response.status === 401) {
+        if (method !== "GET") await redirectToLogin();
+        if (redirectIfUnauthorized) throw new Error("Sign in to manage your item lists.");
+    }
     if (!response.ok) {
         throw new Error(`Item list request failed with status ${response.status}`);
     }
@@ -19,8 +24,8 @@ async function requestListApi(path, method = "GET") {
     return response;
 }
 
-export async function loadItemLists() {
-    const response = await requestListApi("/api/me/lists");
+export async function loadItemLists({ redirectIfUnauthorized = false } = {}) {
+    const response = await requestListApi("/api/me/lists", "GET", redirectIfUnauthorized);
     return response.json();
 }
 
@@ -39,7 +44,6 @@ export function createItemListControls(item, lists, onChange = () => {}) {
         checkbox.type = "checkbox";
         checkbox.id = `${listType}-${item.id}`;
         checkbox.checked = lists?.[listType]?.includes(item.id) ?? false;
-        checkbox.disabled = !lists;
         checkbox.setAttribute("aria-label", labelText);
 
         const label = document.createElement("label");
@@ -50,6 +54,7 @@ export function createItemListControls(item, lists, onChange = () => {}) {
             const checked = checkbox.checked;
             checkbox.disabled = true;
             try {
+                await requireAuthenticatedUser();
                 const encodedItemId = encodeURIComponent(item.id);
                 await requestListApi(`/api/me/lists/${listType}/${encodedItemId}`, checked ? "PUT" : "DELETE");
                 const itemIds = lists[listType];

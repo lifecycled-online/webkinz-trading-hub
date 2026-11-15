@@ -1,4 +1,5 @@
 import { createItemListControls, loadItemLists } from "./item-lists.js";
+import { redirectToLogin } from "./oidc-client.js";
 
 const collections = [
     { name: "color", file: "data/collections/color-collections.json" },
@@ -76,7 +77,7 @@ function renderItems() {
 
 async function initialize() {
     try {
-        lists = await loadItemLists();
+        lists = await loadItemLists({ redirectIfUnauthorized: true });
         const catalog = await loadCatalog();
         const itemsById = new Map(catalog.map((item) => [item.id, item]));
         savedItems = lists[listType].map((itemId) => itemsById.get(itemId)).filter(Boolean);
@@ -85,9 +86,11 @@ async function initialize() {
         renderItems();
     } catch (error) {
         console.error(`Unable to load ${listName.toLowerCase()}:`, error.message);
-        status.textContent = error.message.includes("Sign in")
-            ? `Sign in to view and manage your ${listName.toLowerCase()}.`
-            : `${listName} could not be loaded. Please try again later.`;
+        if (error.message.includes("Sign in")) {
+            await redirectToLogin();
+            return;
+        }
+        status.textContent = `${listName} could not be loaded. Please try again later.`;
     }
 }
 

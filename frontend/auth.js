@@ -1,4 +1,4 @@
-import { userManager } from "./oidc-client.js";
+import { redirectToLogin, userManager } from "./oidc-client.js";
 
 const accountButtons = document.querySelector("#accountButtons");
 const loginButton = document.querySelector("#loginButton");
@@ -42,10 +42,7 @@ form.addEventListener("submit", async (event) => {
     submitButton.disabled = true;
 
     try {
-        await userManager.signinRedirect({
-            extraQueryParams: { login_hint: emailInput.value.trim() },
-            state: { returnTo: window.location.href },
-        });
+        await redirectToLogin(emailInput.value.trim());
     } catch (error) {
         console.error("Unable to start SSO sign-in:", error);
         errorMessage.textContent = "Sign-in could not be started. Please try again.";
