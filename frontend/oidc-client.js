@@ -12,3 +12,19 @@ export const userManager = new UserManager({
     stateStore: new WebStorageStateStore({ store: window.sessionStorage }),
     automaticSilentRenew: false,
 });
+
+export function redirectToLogin(loginHint) {
+    return userManager.signinRedirect({
+        extraQueryParams: loginHint ? { login_hint: loginHint } : {},
+        state: { returnTo: window.location.href },
+    });
+}
+
+export async function requireAuthenticatedUser() {
+    const user = await userManager.getUser();
+    if (!user || user.expired || !user.access_token) {
+        await redirectToLogin();
+        throw new Error("Redirecting to sign in.");
+    }
+    return user;
+}
