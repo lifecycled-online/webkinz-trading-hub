@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "start:frontend": "node frontend/dev-server.js",
     "start:backend": "node --env-file=backend/.env backend/server.js"
   },
   "dependencies": {

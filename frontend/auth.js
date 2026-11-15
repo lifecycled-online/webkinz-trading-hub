@@ -75,8 +75,19 @@ async function updateAccountControls() {
         });
 
         accountButtons.append(accountName, logoutButton);
+
+        const apiUrl = new URL(window.location.origin);
+        apiUrl.port = "3002";
+        apiUrl.pathname = "/api/me";
+        apiUrl.search = "";
+        const apiResponse = await fetch(apiUrl, {
+            headers: { Authorization: `Bearer ${user.access_token}` },
+        });
+        if (!apiResponse.ok) {
+            console.error(`Backend sign-in check failed with status ${apiResponse.status}`);
+        }
     } catch (error) {
-        console.error("Unable to read the local sign-in state:", error);
+        console.error("Unable to update account controls:", error);
     }
 }
 
