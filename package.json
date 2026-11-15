@@ -1,0 +1,12 @@
+{
+  "name": "webkinz-trading-hub",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start:backend": "node --env-file=backend/.env backend/server.js"
+  },
+  "dependencies": {
+    "pg": "^8.16.3"
+  }
+}
