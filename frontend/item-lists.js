@@ -25,7 +25,7 @@ export async function loadItemLists() {
     return response.json();
 }
 
-export function createItemListControls(item, lists) {
+export function createItemListControls(item, lists, onChange = () => {}) {
     const container = document.createElement("div");
     container.className = "button-container";
 
@@ -53,6 +53,10 @@ export function createItemListControls(item, lists) {
             try {
                 const encodedItemId = encodeURIComponent(item.id);
                 await requestListApi(`/api/me/lists/${listType}/${encodedItemId}`, checked ? "PUT" : "DELETE");
+                const itemIds = lists[listType];
+                if (checked && !itemIds.includes(item.id)) itemIds.push(item.id);
+                if (!checked) lists[listType] = itemIds.filter((itemId) => itemId !== item.id);
+                onChange(listType, checked);
             } catch (error) {
                 checkbox.checked = !checked;
                 console.error("Unable to save item list change:", error.message);
