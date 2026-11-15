@@ -113,6 +113,13 @@ function renderOffers() {
             message.textContent = offer.message;
             details.append(message);
         }
+        if (offer.contact) {
+            const contact = document.createElement("p");
+            contact.className = "offer-contact";
+            const method = { discord: "Discord", email: "Email", other: "Other" }[offer.contact.method] ?? "Contact";
+            contact.textContent = `${offer.direction === "incoming" ? "Contact the trader" : "Your shared contact"} via ${method}: ${offer.contact.value}`;
+            details.append(contact);
+        }
         article.append(heading, exchange, details);
 
         if (offer.status === "pending" && offer.direction === "incoming") {
@@ -128,7 +135,19 @@ function renderOffers() {
         } else if (offer.status === "accepted") {
             const note = document.createElement("p");
             note.className = "offer-completion-note";
-            note.textContent = "Agreement recorded in the hub. Complete the item exchange in Webkinz.";
+            const ownConfirmation = offer.direction === "incoming" ? offer.recipientCompletedAt : offer.senderCompletedAt;
+            const otherConfirmation = offer.direction === "incoming" ? offer.senderCompletedAt : offer.recipientCompletedAt;
+            note.textContent = ownConfirmation
+                ? "You confirmed the exchange. Waiting for the other trader."
+                : otherConfirmation
+                    ? "The other trader confirmed. Confirm after you have completed the exchange in Webkinz."
+                    : "After completing the exchange in Webkinz, confirm it here.";
+            article.append(note);
+            if (!ownConfirmation) article.append(createAction("Confirm exchange complete", "complete", offer.id));
+        } else if (offer.status === "completed") {
+            const note = document.createElement("p");
+            note.className = "offer-completion-note";
+            note.textContent = "Both traders confirmed the exchange.";
             article.append(note);
         }
 

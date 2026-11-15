@@ -212,6 +212,8 @@ offerForm.addEventListener("submit", async (event) => {
                 offeringItems,
                 requestingItems,
                 message: offerForm.elements.message.value.trim(),
+                contactMethod: offerForm.elements.contactMethod.value,
+                contactValue: offerForm.elements.contactValue.value.trim(),
             }),
         });
         const result = await response.json().catch(() => ({}));

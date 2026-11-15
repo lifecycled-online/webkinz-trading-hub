@@ -880,6 +880,24 @@ main > nav.card {
     resize: vertical;
 }
 
+.offer-dialog select,
+.offer-dialog input[type="text"] {
+    width: 100%;
+    min-height: 42px;
+    box-sizing: border-box;
+    padding: 8px 10px;
+    border: 1px solid #b9a7a5;
+    border-radius: 6px;
+    background: #fff;
+    font: inherit;
+}
+
+.offer-privacy-note {
+    margin: 6px 0 12px;
+    color: #596973;
+    font-size: 0.9rem;
+}
+
 #offer-compose-status {
     min-height: 1.5em;
     color: #8d3f43;
@@ -985,6 +1003,11 @@ main > nav.card {
 .offer-details p {
     margin: 8px 0 0;
     overflow-wrap: anywhere;
+}
+
+.offer-details .offer-contact {
+    color: #315d50;
+    font-weight: 700;
 }
 
 .offer-completion-note {
