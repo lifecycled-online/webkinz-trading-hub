@@ -1,11 +1,32 @@
+import { createReadStream } from "node:fs";
+import { stat } from "node:fs/promises";
 import { createServer } from "node:http";
+import { dirname, extname, resolve, sep } from "node:path";
+import { fileURLToPath } from "node:url";
 import pg from "pg";
 
 const { Pool } = pg;
 const port = Number(process.env.PORT ?? 3002);
 const databaseUrl = process.env.DATABASE_URL;
+const databaseConnectionUrl = databaseUrl ? new URL(databaseUrl) : null;
+databaseConnectionUrl?.searchParams.delete("sslmode");
 const oidcIssuer = new URL(process.env.OIDC_ISSUER_URL ?? "https://webkinz-trading-hub-dev.auth.ssojet.com/");
 const validListTypes = new Set(["inventory", "wishlist"]);
+const projectRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
+const frontendRoot = resolve(projectRoot, "frontend");
+const dataRoot = resolve(projectRoot, "data");
+const contentTypes = new Map([
+    [".css", "text/css; charset=utf-8"],
+    [".html", "text/html; charset=utf-8"],
+    [".ico", "image/x-icon"],
+    [".jpeg", "image/jpeg"],
+    [".jpg", "image/jpeg"],
+    [".js", "text/javascript; charset=utf-8"],
+    [".json", "application/json; charset=utf-8"],
+    [".png", "image/png"],
+    [".svg", "image/svg+xml"],
+    [".webp", "image/webp"],
+]);
 const allowedOrigins = new Set((process.env.CORS_ORIGINS ?? "http://localhost:3001,http://127.0.0.1:3001")
     .split(",")
     .map((origin) => origin.trim())
@@ -17,7 +38,7 @@ if (!databaseUrl) {
 }
 
 const pool = new Pool({
-    connectionString: databaseUrl,
+    connectionString: databaseConnectionUrl.toString(),
     connectionTimeoutMillis: 5000,
     idleTimeoutMillis: 30000,
     max: 5,
@@ -192,8 +213,44 @@ const server = createServer(async (request, response) => {
         return;
     }
 
-    response.writeHead(404);
-    response.end(JSON.stringify({ error: "Not found" }));
+    if (!["GET", "HEAD"].includes(request.method ?? "")) {
+        response.writeHead(405);
+        response.end();
+        return;
+    }
+
+    let pathname;
+    try {
+        pathname = decodeURIComponent(requestUrl.pathname);
+    } catch {
+        response.writeHead(400);
+        response.end();
+        return;
+    }
+
+    const servesData = pathname.startsWith("/data/");
+    const root = servesData ? dataRoot : frontendRoot;
+    const relativePath = servesData
+        ? pathname.slice("/data/".length)
+        : pathname === "/" ? "index.html" : pathname.slice(1);
+    const filePath = resolve(root, relativePath);
+    if (filePath !== root && !filePath.startsWith(`${root}${sep}`)) {
+        response.writeHead(404);
+        response.end();
+        return;
+    }
+
+    try {
+        const fileInfo = await stat(filePath);
+        if (!fileInfo.isFile()) throw new Error("Not a file");
+        response.setHeader("Content-Type", contentTypes.get(extname(filePath)) ?? "application/octet-stream");
+        response.writeHead(200);
+        if (request.method === "HEAD") response.end();
+        else createReadStream(filePath).pipe(response);
+    } catch {
+        response.writeHead(404);
+        response.end("Not found");
+    }
 });
 
 server.listen(port, "0.0.0.0", () => {
