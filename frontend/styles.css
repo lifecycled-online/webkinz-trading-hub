@@ -384,14 +384,14 @@ main {
     padding-top: 40px;
 }
 
-.saved-list-nav {
+.site-nav {
     display: flex;
     flex-wrap: wrap;
     gap: 10px;
     margin-bottom: 24px;
 }
 
-.saved-list-nav a {
+.site-nav a {
     padding: 10px 16px;
     border-radius: 6px;
     color: #42677f;
@@ -400,10 +400,15 @@ main {
     font-weight: 700;
 }
 
-.saved-list-nav a:hover,
-.saved-list-nav a.active {
+.site-nav a:hover,
+.site-nav a.active {
     color: #fff;
     background: #42677f;
+}
+
+.site-nav a:focus-visible {
+    outline: 3px solid #814c5d;
+    outline-offset: 3px;
 }
 
 .saved-list-panel {
