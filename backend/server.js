@@ -88,9 +88,13 @@ const server = createServer(async (request, response) => {
             response.writeHead(200);
             response.end(JSON.stringify({ status: "ok", database: "connected" }));
         } catch (error) {
-            console.error("Tiger Cloud database health check failed:", error.message);
+            console.error("Tiger Cloud database health check failed:", error);
             response.writeHead(503);
-            response.end(JSON.stringify({ status: "error", database: "unavailable" }));
+            response.end(JSON.stringify({
+                status: "error",
+                database: "unavailable",
+                detail: error instanceof Error ? error.message : String(error),
+            }));
         }
         return;
     }
