@@ -351,54 +351,15 @@ def slide_demo(prs):
 
 def slide_tech(prs):
     slide = prs.slides.add_slide(prs.slide_layouts[6])
-    heading(slide, "Under the hood", "A small, focused stack—built around a local catalog", "The browser handles discovery; authenticated user data and offers live behind an API.", 9)
-    card(slide, 0.78, 2.35, 3.40, 1.25, BLUE, BLUE_LINE, "Web client", "Vanilla HTML, CSS, ES modules", 18, 12)
-    card(slide, 4.96, 2.35, 3.40, 1.25, YELLOW, YELLOW_LINE, "API", "Node.js built-in HTTP server", 18, 12)
-    card(slide, 9.12, 2.35, 3.40, 1.25, PINK, PINK_LINE, "Storage", "PostgreSQL via pg", 18, 12)
-    connector(slide, 4.26, 2.98, 4.82, 2.98, BLUE_LINE)
-    connector(slide, 8.44, 2.98, 8.98, 2.98, YELLOW_LINE)
-    text(slide, "Tradeable catalog", 1.39, 3.88, 2.20, 0.30, 11, MUTED, bold=True, align=PP_ALIGN.CENTER)
-    text(slide, "JSON files served with the frontend", 0.93, 4.23, 3.12, 0.56, 12, INK, align=PP_ALIGN.CENTER)
-    text(slide, "Identity", 5.56, 3.88, 2.20, 0.30, 11, MUTED, bold=True, align=PP_ALIGN.CENTER)
-    text(slide, "OpenID Connect via oidc-client-ts; API checks bearer tokens", 5.02, 4.23, 3.28, 0.56, 12, INK, align=PP_ALIGN.CENTER)
-    text(slide, "Saved data", 9.73, 3.88, 2.20, 0.30, 11, MUTED, bold=True, align=PP_ALIGN.CENTER)
-    text(slide, "Inventory, wishlist, and trade offers", 9.35, 4.23, 2.94, 0.56, 12, INK, align=PP_ALIGN.CENTER)
-    shape(slide, MSO_SHAPE.ROUNDED_RECTANGLE, 0.82, 5.11, 11.70, 1.22, PAPER, GREEN_LINE, True)
-    text(slide, "RUN LOCALLY", 1.08, 5.34, 1.50, 0.24, 10, GREEN_LINE, bold=True)
-    text(slide, "npm install   →   npm run start:frontend   →   http://127.0.0.1:3001", 2.72, 5.27, 9.20, 0.36, 14, INK, bold=True)
-    text(slide, "For accounts and offers: configure backend/.env, apply migrations 002 then 003, and run npm run start:backend. Never include secret values in a deck.", 1.08, 5.79, 11.10, 0.38, 10.5, MUTED)
-    return slide
-
-
-def slide_checklist(prs):
-    slide = prs.slides.add_slide(prs.slide_layouts[6])
-    heading(slide, "Devpost last mile", "The story is ready. Make the submission judge-ready.", "Keep the pitch focused on the user problem, the implemented workflow, and what is still outside the app.", 10)
-    card(slide, 0.80, 2.30, 5.72, 3.74, GREEN, GREEN_LINE, "In the deck", "", 20, 12)
-    card(slide, 6.80, 2.30, 5.72, 3.74, YELLOW, YELLOW_LINE, "Before submitting", "", 20, 12)
-    left = [
-        "Project title + clear tagline",
-        "Problem, solution, and community story",
-        "Actual stack and local setup steps",
-        "Repository link and honest catalog scope",
-    ]
-    right = [
-        "Add final team members + prize tracks",
-        "Record a short demo video",
-        "Capture real screenshots of key pages",
-        "Verify live demo URL and sign-in flow",
-        "Complete the final Devpost submission",
-    ]
-    for i, item in enumerate(left):
-        y = 3.20 + i * 0.58
-        shape(slide, MSO_SHAPE.OVAL, 1.12, y + 0.04, 0.20, 0.20, PAPER, GREEN_LINE)
-        text(slide, "✓", 1.12, y + 0.025, 0.20, 0.20, 10, GREEN_LINE, bold=True, align=PP_ALIGN.CENTER)
-        text(slide, item, 1.47, y, 4.65, 0.34, 12.5, INK)
-    for i, item in enumerate(right):
-        y = 3.10 + i * 0.52
-        shape(slide, MSO_SHAPE.OVAL, 7.12, y + 0.04, 0.20, 0.20, PAPER, YELLOW_LINE)
-        text(slide, "□", 7.11, y + 0.015, 0.22, 0.22, 11, YELLOW_LINE, bold=True, align=PP_ALIGN.CENTER)
-        text(slide, item, 7.47, y, 4.58, 0.34, 12.5, INK)
-    linked_text(slide, "github.com/lifecycled-online/webkinz-trading-hub", "https://github.com/lifecycled-online/webkinz-trading-hub", 2.73, 6.40, 7.95, 0.25, 11)
+    heading(slide, "How it works", "Four services bring the Hub together", "The website connects sign-in, trade features, and saved lists.", 9)
+    card(slide, 0.82, 2.52, 3.36, 2.02, BLUE, BLUE_LINE, "GitHub Pages", "Hosts the website and item catalog.", 18, 13)
+    card(slide, 4.98, 2.52, 3.36, 2.02, YELLOW, YELLOW_LINE, "Render", "Runs matching and trade offers.", 18, 13)
+    card(slide, 9.14, 2.52, 3.36, 2.02, GREEN, GREEN_LINE, "Tiger Cloud", "Stores inventories, wishlists, and offers.", 18, 13)
+    connector(slide, 4.26, 3.54, 4.84, 3.54, BLUE_LINE)
+    connector(slide, 8.42, 3.54, 9.00, 3.54, YELLOW_LINE)
+    card(slide, 0.82, 5.04, 3.36, 1.24, PINK, PINK_LINE, "SSOJet", "Handles player sign-in.", 17, 12)
+    connector(slide, 2.50, 4.60, 2.50, 4.96, PINK_LINE)
+    text(slide, "Players browse on the website, sign in with SSOJet, and use the trade features to organize their lists.", 4.85, 5.18, 7.30, 0.70, 15, INK, bold=True, valign=MSO_ANCHOR.MIDDLE)
     return slide
 
 
@@ -440,7 +401,6 @@ def main():
         slide_catalog,
         slide_demo,
         slide_tech,
-        slide_checklist,
         slide_close,
     ]
     for build_slide in slides:
