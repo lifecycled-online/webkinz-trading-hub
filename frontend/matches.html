@@ -34,6 +34,7 @@
                 <a href="inventory.html">Inventory</a>
                 <a href="wishlist.html">Wishlist</a>
                 <a class="active" href="matches.html" aria-current="page">Matches</a>
+                <a href="offers.html">Offers</a>
             </nav>
             <section class="matches-panel" aria-labelledby="matches-title">
                 <div class="matches-heading">
@@ -47,6 +48,20 @@
                 <div id="matches-list" class="matches-list"></div>
             </section>
         </main>
+        <dialog id="trade-offer-dialog" class="offer-dialog" aria-labelledby="offer-dialog-title">
+            <form id="trade-offer-form">
+                <h2 id="offer-dialog-title">Propose a trade</h2>
+                <input id="offer-recipient" name="recipientTraderId" type="hidden">
+                <div id="offer-item-choices" class="offer-item-choices"></div>
+                <label class="offer-message-label" for="offer-message">Note <span>(optional)</span></label>
+                <textarea id="offer-message" name="message" rows="3" maxlength="500"></textarea>
+                <p id="offer-compose-status" role="alert" aria-live="polite"></p>
+                <div class="offer-dialog-actions">
+                    <button id="cancel-offer" class="offer-action" type="button">Cancel</button>
+                    <button id="send-offer" class="offer-action offer-action-primary" type="submit">Send offer</button>
+                </div>
+            </form>
+        </dialog>
         <script type="module" src="auth.js"></script>
     </body>
 </html>
