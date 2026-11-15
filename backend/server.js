@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { createReadStream } from "node:fs";
 import { stat } from "node:fs/promises";
 import { createServer } from "node:http";
@@ -138,6 +139,76 @@ const server = createServer(async (request, response) => {
             console.error("OIDC identity check failed:", error.message);
             response.writeHead(503);
             response.end(JSON.stringify({ error: "Identity provider unavailable" }));
+        }
+        return;
+    }
+
+    if (request.method === "GET" && request.url === "/api/me/matches") {
+        try {
+            const user = await authenticateRequest(request);
+            if (!user) {
+                response.writeHead(401);
+                response.end(JSON.stringify({ error: "Authentication required" }));
+                return;
+            }
+
+            const result = await pool.query(
+                                `WITH match_items AS (
+                                         SELECT other.subject, 'they_want' AS match_type, mine.item_id
+                                         FROM public.user_item_list_entries AS mine
+                                         JOIN public.user_item_list_entries AS other
+                                             ON other.issuer = mine.issuer
+                                            AND other.list_type = 'wishlist'
+                                            AND other.item_id = mine.item_id
+                                         WHERE mine.issuer = $1
+                                             AND mine.subject = $2
+                                             AND mine.list_type = 'inventory'
+                                             AND other.subject <> $2
+                                         UNION
+                                         SELECT other.subject, 'you_want' AS match_type, other.item_id
+                                         FROM public.user_item_list_entries AS mine
+                                         JOIN public.user_item_list_entries AS other
+                                             ON other.issuer = mine.issuer
+                                            AND other.list_type = 'inventory'
+                                            AND other.item_id = mine.item_id
+                                         WHERE mine.issuer = $1
+                                             AND mine.subject = $2
+                                             AND mine.list_type = 'wishlist'
+                                             AND other.subject <> $2
+                                 ), reciprocal_traders AS (
+                                         SELECT subject
+                                         FROM match_items
+                                         GROUP BY subject
+                                         HAVING COUNT(DISTINCT match_type) = 2
+                                 )
+                                 SELECT match_items.subject, match_items.match_type, match_items.item_id
+                                 FROM match_items
+                                 JOIN reciprocal_traders USING (subject)
+                                 ORDER BY match_items.subject, match_items.match_type, match_items.item_id`,
+                [user.issuer, user.sub],
+            );
+            const matchesBySubject = new Map();
+            for (const row of result.rows) {
+                let match = matchesBySubject.get(row.subject);
+                if (!match) {
+                    match = {
+                        trader: `Trader ${createHash("sha256").update(row.subject).digest("hex").slice(0, 12).toUpperCase()}`,
+                        itemsTheyWant: [],
+                        itemsYouWant: [],
+                    };
+                    matchesBySubject.set(row.subject, match);
+                }
+
+                const itemIds = row.match_type === "they_want" ? match.itemsTheyWant : match.itemsYouWant;
+                itemIds.push(row.item_id);
+            }
+
+            response.writeHead(200);
+            response.end(JSON.stringify({ matches: [...matchesBySubject.values()] }));
+        } catch (error) {
+            console.error("User matches request failed:", error.message);
+            response.writeHead(503);
+            response.end(JSON.stringify({ error: "Matches are unavailable" }));
         }
         return;
     }
