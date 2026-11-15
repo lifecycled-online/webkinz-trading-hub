@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Webkinz Trading Hub - Offers</title>
+        <link rel="stylesheet" href="styles.css">
+        <script type="module" src="offers.js"></script>
+    </head>
+    <body>
+        <div class="site-background-items" aria-hidden="true">
+            <img class="site-item item-blue-one" src="https://static.wikitide.net/webkinzguidewiki/b/bc/Bluebutterflybed.png" alt="">
+            <img class="site-item item-blue-two" src="https://static.wikitide.net/webkinzguidewiki/a/a1/Blueavenuebed.png" alt="">
+            <img class="site-item item-pink-one" src="https://static.wikitide.net/webkinzguidewiki/d/d8/Ballerinabed.png" alt="">
+            <img class="site-item item-pink-two" src="https://static.wikitide.net/webkinzguidewiki/9/92/Cherryblossombed.png" alt="">
+            <img class="site-item item-yellow-one" src="https://static.wikitide.net/webkinzguidewiki/8/8d/Daffodilbed.png" alt="">
+            <img class="site-item item-yellow-two" src="https://static.wikitide.net/webkinzguidewiki/1/17/Plushgiraffebed.png" alt="">
+        </div>
+        <header>
+            <div class="pageTitle">
+                <h1><a style="text-decoration: none;" href="index.html">Webkinz Trading Hub</a></h1>
+                <h2>Review trade proposals and keep their status in one place.</h2>
+            </div>
+            <div id="accountButtons">
+                <button id="loginButton" class="headerButton" type="button">Login</button>
+                <button id="registerButton" class="headerButton" type="button">Register</button>
+            </div>
+        </header>
+        <main>
+            <nav class="site-nav" aria-label="Main navigation">
+                <a href="index.html">Home</a>
+                <a href="collections.html">Browse</a>
+                <a href="all-items.html">All Items</a>
+                <a href="inventory.html">Inventory</a>
+                <a href="wishlist.html">Wishlist</a>
+                <a href="matches.html">Matches</a>
+                <a class="active" href="offers.html" aria-current="page">Offers</a>
+            </nav>
+            <section class="matches-panel offers-panel" aria-labelledby="offers-title">
+                <div class="matches-heading">
+                    <div>
+                        <h2 id="offers-title">Trade offers</h2>
+                        <p id="offers-count" aria-live="polite">Loading offers...</p>
+                    </div>
+                    <button id="refresh-offers" class="matches-refresh" type="button">Refresh</button>
+                </div>
+                <div class="offer-tabs" role="group" aria-label="Offer direction">
+                    <button class="offer-tab active" type="button" data-direction="incoming" aria-pressed="true">Received</button>
+                    <button class="offer-tab" type="button" data-direction="outgoing" aria-pressed="false">Sent</button>
+                </div>
+                <p id="offers-status" class="matches-status" role="status" aria-live="polite">Loading your offers...</p>
+                <div id="offers-list" class="matches-list"></div>
+            </section>
+        </main>
+        <script type="module" src="auth.js"></script>
+    </body>
+</html>

@@ -11,7 +11,13 @@ const matchList = document.querySelector("#matches-list");
 const matchCount = document.querySelector("#matches-count");
 const status = document.querySelector("#matches-status");
 const refreshButton = document.querySelector("#refresh-matches");
+const offerDialog = document.querySelector("#trade-offer-dialog");
+const offerForm = document.querySelector("#trade-offer-form");
+const offerChoices = document.querySelector("#offer-item-choices");
+const offerStatus = document.querySelector("#offer-compose-status");
+const sendOfferButton = document.querySelector("#send-offer");
 let itemsById = new Map();
+let currentMatch = null;
 
 async function loadCatalog() {
     const categoryGroups = await Promise.all(collections.map(async ({ name, file }) => {
@@ -67,6 +73,47 @@ function renderItems(itemIds) {
     return container;
 }
 
+function renderOfferChoices(itemIds, name, legendText) {
+    const fieldset = document.createElement("fieldset");
+    fieldset.className = "offer-choice-group";
+    const legend = document.createElement("legend");
+    legend.textContent = legendText;
+    fieldset.append(legend);
+
+    for (const itemId of itemIds) {
+        const item = itemsById.get(itemId);
+        if (!item) continue;
+
+        const label = document.createElement("label");
+        label.className = "offer-choice";
+        const checkbox = document.createElement("input");
+        checkbox.type = "checkbox";
+        checkbox.name = name;
+        checkbox.value = item.id;
+        const image = document.createElement("img");
+        image.src = item.image_url;
+        image.alt = "";
+        const title = document.createElement("span");
+        title.textContent = item.title;
+        label.append(checkbox, image, title);
+        fieldset.append(label);
+    }
+
+    return fieldset;
+}
+
+function openOfferDialog(match) {
+    currentMatch = match;
+    offerForm.reset();
+    offerStatus.textContent = "";
+    document.querySelector("#offer-recipient").value = match.traderId;
+    offerChoices.replaceChildren(
+        renderOfferChoices(match.itemsTheyWant, "offering", "Items you offer"),
+        renderOfferChoices(match.itemsYouWant, "requesting", "Items you request"),
+    );
+    offerDialog.showModal();
+}
+
 function renderMatches(matches) {
     matchList.replaceChildren();
     matchCount.textContent = `${matches.length} ${matches.length === 1 ? "trader match" : "trader matches"}`;
@@ -81,8 +128,16 @@ function renderMatches(matches) {
     for (const match of matches) {
         const article = document.createElement("article");
         article.className = "trade-match";
+        const cardHeading = document.createElement("div");
+        cardHeading.className = "match-card-heading";
         const heading = document.createElement("h3");
         heading.textContent = match.trader;
+        const proposeButton = document.createElement("button");
+        proposeButton.className = "offer-action offer-action-primary";
+        proposeButton.type = "button";
+        proposeButton.textContent = "Propose trade";
+        proposeButton.addEventListener("click", () => openOfferDialog(match));
+        cardHeading.append(heading, proposeButton);
 
         const wants = document.createElement("section");
         wants.className = "match-side match-side-wants";
@@ -99,7 +154,7 @@ function renderMatches(matches) {
         const exchange = document.createElement("div");
         exchange.className = "match-exchange";
         exchange.append(wants, offers);
-        article.append(heading, exchange);
+        article.append(cardHeading, exchange);
         matchList.append(article);
     }
 }
@@ -131,4 +186,48 @@ async function initialize() {
 }
 
 refreshButton.addEventListener("click", initialize);
+document.querySelector("#cancel-offer").addEventListener("click", () => offerDialog.close());
+offerForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const offeringItems = [...offerForm.querySelectorAll('input[name="offering"]:checked')].map((input) => input.value);
+    const requestingItems = [...offerForm.querySelectorAll('input[name="requesting"]:checked')].map((input) => input.value);
+    if (offeringItems.length === 0 || requestingItems.length === 0) {
+        offerStatus.textContent = "Choose at least one item on both sides of the offer.";
+        return;
+    }
+
+    sendOfferButton.disabled = true;
+    offerStatus.textContent = "Sending offer...";
+    try {
+        const user = await userManager.getUser();
+        if (!user || user.expired || !user.access_token) throw new Error("Sign in to send trade offers.");
+        const response = await fetch(new URL("/api/me/offers", apiBaseUrl), {
+            method: "POST",
+            headers: {
+                Authorization: `Bearer ${user.access_token}`,
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                recipientTraderId: currentMatch.traderId,
+                offeringItems,
+                requestingItems,
+                message: offerForm.elements.message.value.trim(),
+            }),
+        });
+        const result = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(result.error || "The offer could not be sent.");
+
+        offerDialog.close();
+        status.hidden = false;
+        status.replaceChildren(document.createTextNode(`Offer sent to ${currentMatch.trader}. `));
+        const offersLink = document.createElement("a");
+        offersLink.href = "offers.html";
+        offersLink.textContent = "View offers";
+        status.append(offersLink);
+    } catch (error) {
+        offerStatus.textContent = error.message;
+    } finally {
+        sendOfferButton.disabled = false;
+    }
+});
 initialize();

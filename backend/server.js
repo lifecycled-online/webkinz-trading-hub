@@ -84,13 +84,65 @@ async function authenticateRequest(request) {
         : null;
 }
 
+function getTraderId(subject) {
+    return createHash("sha256").update(subject).digest("hex");
+}
+
+async function readJsonBody(request) {
+    const chunks = [];
+    let size = 0;
+    for await (const chunk of request) {
+        size += chunk.length;
+        if (size > 20000) throw Object.assign(new Error("Request body is too large"), { status: 413 });
+        chunks.push(chunk);
+    }
+
+    try {
+        return JSON.parse(Buffer.concat(chunks).toString("utf8"));
+    } catch {
+        throw Object.assign(new Error("Invalid JSON body"), { status: 400 });
+    }
+}
+
+function parseTradeItemIds(value) {
+    if (!Array.isArray(value) || value.length < 1 || value.length > 20) return null;
+    if (value.some((itemId) => typeof itemId !== "string" || itemId.length < 1 || itemId.length > 200 || /[\u0000-\u001f]/.test(itemId))) {
+        return null;
+    }
+
+    return new Set(value);
+}
+
+async function validateTradeItems(client, issuer, sender, recipient, offeringItems, requestingItems) {
+    const result = await client.query(
+        `SELECT subject, list_type, item_id
+         FROM public.user_item_list_entries
+         WHERE issuer = $1
+           AND (
+               (subject = $2 AND list_type = 'inventory' AND item_id = ANY($3::text[])) OR
+               (subject = $4 AND list_type = 'wishlist' AND item_id = ANY($3::text[])) OR
+               (subject = $4 AND list_type = 'inventory' AND item_id = ANY($5::text[])) OR
+               (subject = $2 AND list_type = 'wishlist' AND item_id = ANY($5::text[]))
+           )
+         FOR SHARE`,
+        [issuer, sender, [...offeringItems], recipient, [...requestingItems]],
+    );
+    const presentItems = new Set(result.rows.map((row) => `${row.subject}\u0000${row.list_type}\u0000${row.item_id}`));
+    const hasEveryItem = (subject, listType, itemIds) => [...itemIds].every((itemId) => presentItems.has(`${subject}\u0000${listType}\u0000${itemId}`));
+
+    return hasEveryItem(sender, "inventory", offeringItems)
+        && hasEveryItem(recipient, "wishlist", offeringItems)
+        && hasEveryItem(recipient, "inventory", requestingItems)
+        && hasEveryItem(sender, "wishlist", requestingItems);
+}
+
 const server = createServer(async (request, response) => {
     response.setHeader("Content-Type", "application/json; charset=utf-8");
 
     const origin = request.headers.origin;
     if (origin && allowedOrigins.has(origin)) {
         response.setHeader("Access-Control-Allow-Origin", origin);
-        response.setHeader("Access-Control-Allow-Methods", "GET, PUT, DELETE, OPTIONS");
+        response.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
         response.setHeader("Access-Control-Allow-Headers", "Authorization, Content-Type");
         response.setHeader("Vary", "Origin");
     }
@@ -192,7 +244,8 @@ const server = createServer(async (request, response) => {
                 let match = matchesBySubject.get(row.subject);
                 if (!match) {
                     match = {
-                        trader: `Trader ${createHash("sha256").update(row.subject).digest("hex").slice(0, 12).toUpperCase()}`,
+                        traderId: getTraderId(row.subject),
+                        trader: `Trader ${getTraderId(row.subject).slice(0, 12).toUpperCase()}`,
                         itemsTheyWant: [],
                         itemsYouWant: [],
                     };
@@ -213,7 +266,260 @@ const server = createServer(async (request, response) => {
         return;
     }
 
+    if (request.method === "GET" && request.url === "/api/me/offers") {
+        try {
+            const user = await authenticateRequest(request);
+            if (!user) {
+                response.writeHead(401);
+                response.end(JSON.stringify({ error: "Authentication required" }));
+                return;
+            }
+
+            const result = await pool.query(
+                `SELECT offers.id, offers.sender_subject, offers.recipient_subject,
+                        offers.message, offers.status, offers.created_at,
+                        offer_items.side, offer_items.item_id
+                 FROM public.trade_offers AS offers
+                 LEFT JOIN public.trade_offer_items AS offer_items ON offer_items.offer_id = offers.id
+                 WHERE offers.issuer = $1
+                   AND (offers.sender_subject = $2 OR offers.recipient_subject = $2)
+                 ORDER BY offers.created_at DESC, offers.id DESC, offer_items.side, offer_items.item_id`,
+                [user.issuer, user.sub],
+            );
+            const offersById = new Map();
+            for (const row of result.rows) {
+                let offer = offersById.get(row.id);
+                if (!offer) {
+                    const incoming = row.recipient_subject === user.sub;
+                    const counterpart = incoming ? row.sender_subject : row.recipient_subject;
+                    offer = {
+                        id: row.id,
+                        direction: incoming ? "incoming" : "outgoing",
+                        trader: `Trader ${getTraderId(counterpart).slice(0, 12).toUpperCase()}`,
+                        message: row.message,
+                        status: row.status,
+                        createdAt: row.created_at,
+                        offeringItems: [],
+                        requestingItems: [],
+                    };
+                    offersById.set(row.id, offer);
+                }
+
+                if (row.item_id) {
+                    const itemIds = row.side === "offering" ? offer.offeringItems : offer.requestingItems;
+                    itemIds.push(row.item_id);
+                }
+            }
+
+            response.writeHead(200);
+            response.end(JSON.stringify({ offers: [...offersById.values()] }));
+        } catch (error) {
+            console.error("User offers request failed:", error.message);
+            response.writeHead(503);
+            response.end(JSON.stringify({ error: "Offers are unavailable" }));
+        }
+        return;
+    }
+
+    if (request.method === "POST" && request.url === "/api/me/offers") {
+        let client;
+        let transactionStarted = false;
+        try {
+            const user = await authenticateRequest(request);
+            if (!user) {
+                response.writeHead(401);
+                response.end(JSON.stringify({ error: "Authentication required" }));
+                return;
+            }
+
+            const body = await readJsonBody(request);
+            const offeringItems = body && typeof body === "object" && !Array.isArray(body)
+                ? parseTradeItemIds(body.offeringItems)
+                : null;
+            const requestingItems = body && typeof body === "object" && !Array.isArray(body)
+                ? parseTradeItemIds(body.requestingItems)
+                : null;
+            if (!offeringItems || !requestingItems
+                || typeof body.recipientTraderId !== "string"
+                || !/^[a-f0-9]{64}$/.test(body.recipientTraderId)
+                || (body.message !== undefined && (typeof body.message !== "string" || body.message.length > 500))) {
+                response.writeHead(400);
+                response.end(JSON.stringify({ error: "Invalid trade offer" }));
+                return;
+            }
+
+            client = await pool.connect();
+            await client.query("BEGIN");
+            transactionStarted = true;
+            const candidates = await client.query(
+                `SELECT DISTINCT other.subject
+                 FROM public.user_item_list_entries AS mine
+                 JOIN public.user_item_list_entries AS other
+                   ON other.issuer = mine.issuer
+                  AND other.item_id = mine.item_id
+                  AND ((mine.list_type = 'inventory' AND other.list_type = 'wishlist')
+                    OR (mine.list_type = 'wishlist' AND other.list_type = 'inventory'))
+                 WHERE mine.issuer = $1 AND mine.subject = $2 AND other.subject <> $2`,
+                [user.issuer, user.sub],
+            );
+            const recipient = candidates.rows.find((row) => getTraderId(row.subject) === body.recipientTraderId)?.subject;
+            if (!recipient) {
+                await client.query("ROLLBACK");
+                transactionStarted = false;
+                response.writeHead(404);
+                response.end(JSON.stringify({ error: "That trade match is no longer available" }));
+                return;
+            }
+
+            const itemsStillMatch = await validateTradeItems(
+                client,
+                user.issuer,
+                user.sub,
+                recipient,
+                offeringItems,
+                requestingItems,
+            );
+            if (!itemsStillMatch) {
+                await client.query("ROLLBACK");
+                transactionStarted = false;
+                response.writeHead(409);
+                response.end(JSON.stringify({ error: "Those items no longer make a valid match" }));
+                return;
+            }
+
+            const created = await client.query(
+                `INSERT INTO public.trade_offers (issuer, sender_subject, recipient_subject, message)
+                 VALUES ($1, $2, $3, $4)
+                 RETURNING id, status, created_at`,
+                [user.issuer, user.sub, recipient, (body.message ?? "").trim()],
+            );
+            const offerId = created.rows[0].id;
+            await client.query(
+                `INSERT INTO public.trade_offer_items (offer_id, side, item_id)
+                 SELECT $1, 'offering', item_id FROM unnest($2::text[]) AS selected(item_id)
+                 UNION ALL
+                 SELECT $1, 'requesting', item_id FROM unnest($3::text[]) AS selected(item_id)`,
+                [offerId, [...offeringItems], [...requestingItems]],
+            );
+            await client.query("COMMIT");
+            transactionStarted = false;
+
+            response.writeHead(201);
+            response.end(JSON.stringify({ offer: created.rows[0] }));
+        } catch (error) {
+            if (transactionStarted) await client.query("ROLLBACK").catch(() => {});
+            console.error("Trade offer creation failed:", error.message);
+            response.writeHead(error.status ?? 503);
+            response.end(JSON.stringify({ error: error.status ? error.message : "Trade offers are unavailable" }));
+        } finally {
+            client?.release();
+        }
+        return;
+    }
+
     const requestUrl = new URL(request.url, "http://127.0.0.1");
+    const offerActionMatch = requestUrl.pathname.match(/^\/api\/me\/offers\/(\d+)$/);
+    if (offerActionMatch && request.method === "PUT") {
+        let client;
+        let transactionStarted = false;
+        try {
+            const user = await authenticateRequest(request);
+            if (!user) {
+                response.writeHead(401);
+                response.end(JSON.stringify({ error: "Authentication required" }));
+                return;
+            }
+
+            const body = await readJsonBody(request);
+            if (!body || typeof body !== "object" || Array.isArray(body)
+                || !new Set(["accept", "decline", "withdraw"]).has(body.action)) {
+                response.writeHead(400);
+                response.end(JSON.stringify({ error: "Invalid offer action" }));
+                return;
+            }
+
+            client = await pool.connect();
+            await client.query("BEGIN");
+            transactionStarted = true;
+            const result = await client.query(
+                `SELECT id, sender_subject, recipient_subject, status
+                 FROM public.trade_offers
+                 WHERE issuer = $1 AND id = $2
+                   AND (sender_subject = $3 OR recipient_subject = $3)
+                 FOR UPDATE`,
+                [user.issuer, offerActionMatch[1], user.sub],
+            );
+            const offer = result.rows[0];
+            if (!offer) {
+                await client.query("ROLLBACK");
+                transactionStarted = false;
+                response.writeHead(404);
+                response.end(JSON.stringify({ error: "Offer not found" }));
+                return;
+            }
+            if (offer.status !== "pending") {
+                await client.query("ROLLBACK");
+                transactionStarted = false;
+                response.writeHead(409);
+                response.end(JSON.stringify({ error: "This offer is no longer pending" }));
+                return;
+            }
+
+            const isSender = offer.sender_subject === user.sub;
+            const isRecipient = offer.recipient_subject === user.sub;
+            if ((body.action === "withdraw" && !isSender) || (body.action !== "withdraw" && !isRecipient)) {
+                await client.query("ROLLBACK");
+                transactionStarted = false;
+                response.writeHead(403);
+                response.end(JSON.stringify({ error: "You cannot perform that action on this offer" }));
+                return;
+            }
+
+            if (body.action === "accept") {
+                const itemRows = await client.query(
+                    "SELECT side, item_id FROM public.trade_offer_items WHERE offer_id = $1",
+                    [offer.id],
+                );
+                const offeringItems = new Set(itemRows.rows.filter((row) => row.side === "offering").map((row) => row.item_id));
+                const requestingItems = new Set(itemRows.rows.filter((row) => row.side === "requesting").map((row) => row.item_id));
+                const itemsStillMatch = await validateTradeItems(
+                    client,
+                    user.issuer,
+                    offer.sender_subject,
+                    offer.recipient_subject,
+                    offeringItems,
+                    requestingItems,
+                );
+                if (!itemsStillMatch) {
+                    await client.query("ROLLBACK");
+                    transactionStarted = false;
+                    response.writeHead(409);
+                    response.end(JSON.stringify({ error: "The listed items no longer line up with both traders' lists" }));
+                    return;
+                }
+            }
+
+            await client.query(
+                `UPDATE public.trade_offers
+                 SET status = $3, updated_at = now()
+                 WHERE issuer = $1 AND id = $2`,
+                [user.issuer, offer.id, body.action === "withdraw" ? "withdrawn" : body.action === "accept" ? "accepted" : "declined"],
+            );
+            await client.query("COMMIT");
+            transactionStarted = false;
+            response.writeHead(200);
+            response.end(JSON.stringify({ status: body.action === "withdraw" ? "withdrawn" : body.action === "accept" ? "accepted" : "declined" }));
+        } catch (error) {
+            if (transactionStarted) await client.query("ROLLBACK").catch(() => {});
+            console.error("Trade offer action failed:", error.message);
+            response.writeHead(error.status ?? 503);
+            response.end(JSON.stringify({ error: error.status ? error.message : "Trade offers are unavailable" }));
+        } finally {
+            client?.release();
+        }
+        return;
+    }
+
     if (requestUrl.pathname === "/api/me/lists" || requestUrl.pathname.startsWith("/api/me/lists/")) {
         try {
             const user = await authenticateRequest(request);
