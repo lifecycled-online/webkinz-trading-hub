@@ -498,6 +498,47 @@ const server = createServer(async (request, response) => {
                      RETURNING status, sender_completed_at, recipient_completed_at`,
                     [user.issuer, offer.id, isSender, isRecipient],
                 );
+                if (updated.rows[0].status === "completed") {
+                    const itemRows = await client.query(
+                        "SELECT side, item_id FROM public.trade_offer_items WHERE offer_id = $1",
+                        [offer.id],
+                    );
+                    const offeringItems = [...new Set(itemRows.rows.filter((row) => row.side === "offering").map((row) => row.item_id))];
+                    const requestingItems = [...new Set(itemRows.rows.filter((row) => row.side === "requesting").map((row) => row.item_id))];
+
+                    await client.query(
+                        `DELETE FROM public.user_item_list_entries
+                         WHERE issuer = $1 AND subject = $2 AND list_type = 'inventory' AND item_id = ANY($3::text[])`,
+                        [user.issuer, offer.sender_subject, offeringItems],
+                    );
+                    await client.query(
+                        `DELETE FROM public.user_item_list_entries
+                         WHERE issuer = $1 AND subject = $2 AND list_type = 'inventory' AND item_id = ANY($3::text[])`,
+                        [user.issuer, offer.recipient_subject, requestingItems],
+                    );
+                    await client.query(
+                        `INSERT INTO public.user_item_list_entries (issuer, subject, list_type, item_id)
+                         SELECT $1, $2, 'inventory', item_id FROM unnest($3::text[]) AS transferred(item_id)
+                         ON CONFLICT DO NOTHING`,
+                        [user.issuer, offer.recipient_subject, offeringItems],
+                    );
+                    await client.query(
+                        `INSERT INTO public.user_item_list_entries (issuer, subject, list_type, item_id)
+                         SELECT $1, $2, 'inventory', item_id FROM unnest($3::text[]) AS transferred(item_id)
+                         ON CONFLICT DO NOTHING`,
+                        [user.issuer, offer.sender_subject, requestingItems],
+                    );
+                    await client.query(
+                        `DELETE FROM public.user_item_list_entries
+                         WHERE issuer = $1 AND subject = $2 AND list_type = 'wishlist' AND item_id = ANY($3::text[])`,
+                        [user.issuer, offer.recipient_subject, offeringItems],
+                    );
+                    await client.query(
+                        `DELETE FROM public.user_item_list_entries
+                         WHERE issuer = $1 AND subject = $2 AND list_type = 'wishlist' AND item_id = ANY($3::text[])`,
+                        [user.issuer, offer.sender_subject, requestingItems],
+                    );
+                }
                 await client.query("COMMIT");
                 transactionStarted = false;
                 response.writeHead(200);
