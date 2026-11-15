@@ -411,9 +411,9 @@ const server = createServer(async (request, response) => {
             const offerId = created.rows[0].id;
             await client.query(
                 `INSERT INTO public.trade_offer_items (offer_id, side, item_id)
-                 SELECT $1, 'offering', item_id FROM unnest($2::text[]) AS selected(item_id)
+                 SELECT $1::bigint, 'offering', item_id FROM unnest($2::text[]) AS selected(item_id)
                  UNION ALL
-                 SELECT $1, 'requesting', item_id FROM unnest($3::text[]) AS selected(item_id)`,
+                 SELECT $1::bigint, 'requesting', item_id FROM unnest($3::text[]) AS selected(item_id)`,
                 [offerId, [...offeringItems], [...requestingItems]],
             );
             await client.query("COMMIT");
