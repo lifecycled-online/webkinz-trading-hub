@@ -22,40 +22,82 @@ body {
 
 .site-item {
     position: absolute;
-    width: clamp(72px, 10vw, 128px);
+    width: clamp(48px, 6.5vw, 84px);
     height: auto;
     opacity: 0.14;
     filter: drop-shadow(0 5px 12px rgba(167, 107, 126, 0.2));
 }
 
 .item-blue-one {
-    top: 34vh;
+    top: 2vh;
     left: 1vw;
+    transform: rotate(-12deg);
 }
 
 .item-blue-two {
-    top: 77vh;
+    top: 7vh;
     right: 1vw;
+    transform: rotate(8deg);
 }
 
 .item-pink-one {
-    top: 52vh;
-    right: 2vw;
+    top: 22vh;
+    right: 8vw;
+    transform: rotate(13deg);
 }
 
 .item-pink-two {
-    top: 91vh;
-    left: 2vw;
+    top: 16vh;
+    left: 7vw;
+    transform: rotate(-7deg);
 }
 
 .item-yellow-one {
-    top: 68vh;
-    left: 1vw;
+    top: 34vh;
+    left: 0.5vw;
+    transform: rotate(10deg);
 }
 
 .item-yellow-two {
-    top: 22vh;
+    top: 39vh;
     right: 2vw;
+    transform: rotate(-11deg);
+}
+
+.item-blue-three {
+    top: 50vh;
+    left: 9vw;
+    transform: rotate(9deg);
+}
+
+.item-blue-four {
+    top: 55vh;
+    right: 9vw;
+    transform: rotate(-12deg);
+}
+
+.item-pink-three {
+    top: 70vh;
+    right: 4vw;
+    transform: rotate(6deg);
+}
+
+.item-pink-four {
+    top: 68vh;
+    left: 4vw;
+    transform: rotate(-9deg);
+}
+
+.item-yellow-three {
+    bottom: 4vh;
+    left: 7.5vw;
+    transform: rotate(14deg);
+}
+
+.item-yellow-four {
+    bottom: 4vh;
+    right: 6vw;
+    transform: rotate(-6deg);
 }
 
 header {
