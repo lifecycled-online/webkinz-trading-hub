@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Webkinz Trading Hub | Sign in</title>
+	<link rel="stylesheet" href="styles.css">
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/oidc-client-ts/2.2.5/browser/oidc-client-ts.min.js"></script>
+	<script src="config.js"></script>
+	<script src="auth.js"></script>
+</head>
+<body>
+	<main id="app">
+		<h1>Webkinz Trading Hub</h1>
+
+		<section id="login" aria-labelledby="login-heading">
+			<h2 id="login-heading">Sign in</h2>
+			<p>Sign in to continue to the trading hub.</p>
+			<button type="button" onclick="login()">Sign in with your account</button>
+		</section>
+
+		<section id="profile" aria-labelledby="profile-heading" style="display: none;">
+			<h2 id="profile-heading">Your account</h2>
+			<pre id="profile-data"></pre>
+			<button type="button" onclick="logout()">Sign out</button>
+		</section>
+	</main>
+</body>
+</html>
