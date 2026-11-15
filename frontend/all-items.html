@@ -39,8 +39,16 @@
                 <h3><a href="collections.html">View Categories</a></h3>
             </nav>
             <div id="type" class="card yellow">
+                <div class="catalog-toolbar">
+                    <label class="catalog-search" for="all-items-search">
+                        <span>Search items</span>
+                        <input id="all-items-search" type="search" placeholder="Search by item name" disabled>
+                    </label>
+                    <p id="all-items-count" role="status" aria-live="polite">Loading tradeable items...</p>
+                </div>
+                <p id="all-items-empty" class="catalog-empty" role="status" hidden></p>
                 <div style="padding-top: 20px;" id="items" class="items"></div>
-                <div class="pagination" id="pagination"> 
+                <div class="pagination" id="pagination" hidden>
                     <a href="#" id="prev">Previous</a> 
                     <span id="page-numbers"></span> 
                     <a href="#" id="next">Next</a>

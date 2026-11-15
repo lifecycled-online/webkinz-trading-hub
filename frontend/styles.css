@@ -457,6 +457,44 @@ main {
     font: inherit;
 }
 
+.catalog-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: end;
+    justify-content: space-between;
+    gap: 16px 24px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.catalog-search {
+    display: grid;
+    gap: 6px;
+    width: min(320px, 100%);
+    font-weight: 700;
+}
+
+.catalog-search input {
+    min-height: 42px;
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+    border: 1px solid #b9a7a5;
+    border-radius: 6px;
+    padding: 8px 10px;
+    background: #fff;
+    font: inherit;
+}
+
+.catalog-empty {
+    margin: 20px 24px;
+    text-align: center;
+}
+
+.catalog-empty[hidden] {
+    display: none;
+}
+
 .saved-list-status,
 .saved-list-empty {
     padding: 16px;
@@ -477,7 +515,7 @@ main {
     max-width: 100%;
 }
 
-.saved-list-panel .pagination[hidden] {
+.pagination[hidden] {
     display: none;
 }
 
