@@ -515,6 +515,88 @@ main > nav.card {
     padding-top: 40px;
 }
 
+.saved-list-nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 24px;
+}
+
+.saved-list-nav a {
+    padding: 10px 16px;
+    border-radius: 6px;
+    color: #42677f;
+    background: #fff;
+    text-decoration: none;
+    font-weight: 700;
+}
+
+.saved-list-nav a:hover,
+.saved-list-nav a.active {
+    color: #fff;
+    background: #42677f;
+}
+
+.saved-list-panel {
+    padding: 24px;
+    border: 2px dashed #d4a0a5;
+    border-radius: 8px;
+    background: rgba(255, 253, 228, 0.94);
+}
+
+.saved-list-heading {
+    display: flex;
+    align-items: end;
+    justify-content: space-between;
+    gap: 24px;
+}
+
+.saved-list-heading h2,
+.saved-list-heading p {
+    margin: 0 0 8px;
+}
+
+.saved-list-search {
+    display: grid;
+    gap: 6px;
+    width: min(320px, 100%);
+    font-weight: 700;
+}
+
+.saved-list-search input {
+    min-height: 42px;
+    box-sizing: border-box;
+    border: 1px solid #b9a7a5;
+    border-radius: 6px;
+    padding: 8px 10px;
+    background: #fff;
+    font: inherit;
+}
+
+.saved-list-status,
+.saved-list-empty {
+    padding: 16px;
+    text-align: center;
+}
+
+.saved-list-status[hidden],
+.saved-list-empty[hidden] {
+    display: none;
+}
+
+.saved-list-panel .item-card {
+    margin: 0 8px 18px;
+    text-align: center;
+}
+
+.saved-list-panel .items img {
+    max-width: 100%;
+}
+
+.saved-list-panel .pagination[hidden] {
+    display: none;
+}
+
 .tabs {
     display: flex;
     flex-wrap: wrap;
@@ -735,6 +817,20 @@ main > nav.card {
         flex-wrap: wrap;
         justify-content: center;
         gap: 12px;
+    }
+
+    main {
+        margin: 24px;
+    }
+
+    .saved-list-panel {
+        padding: 16px;
+    }
+
+    .saved-list-heading {
+        align-items: stretch;
+        flex-direction: column;
+        gap: 8px;
     }
 
     .headerButton {

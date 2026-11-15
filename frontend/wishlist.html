@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Webkinz Trading Hub - Wishlist</title>
+        <link rel="stylesheet" href="styles.css">
+        <script type="module" src="saved-list.js"></script>
+    </head>
+    <body data-list-type="wishlist">
+        <div class="site-background-items" aria-hidden="true">
+            <img class="site-item item-blue-one" src="https://static.wikitide.net/webkinzguidewiki/b/bc/Bluebutterflybed.png" alt="">
+            <img class="site-item item-blue-two" src="https://static.wikitide.net/webkinzguidewiki/a/a1/Blueavenuebed.png" alt="">
+            <img class="site-item item-pink-one" src="https://static.wikitide.net/webkinzguidewiki/d/d8/Ballerinabed.png" alt="">
+            <img class="site-item item-pink-two" src="https://static.wikitide.net/webkinzguidewiki/9/92/Cherryblossombed.png" alt="">
+            <img class="site-item item-yellow-one" src="https://static.wikitide.net/webkinzguidewiki/8/8d/Daffodilbed.png" alt="">
+            <img class="site-item item-yellow-two" src="https://static.wikitide.net/webkinzguidewiki/1/17/Plushgiraffebed.png" alt="">
+        </div>
+        <header>
+            <div class="pageTitle">
+                <h1><a style="text-decoration: none;" href="index.html">Webkinz Trading Hub</a></h1>
+                <h2>A place to organize trades, keep track of your inventory, and create a wishlist.</h2>
+            </div>
+            <div id="accountButtons">
+                <button id="loginButton" class="headerButton" type="button">Login</button>
+                <button id="registerButton" class="headerButton" type="button">Register</button>
+            </div>
+        </header>
+        <main>
+            <nav class="saved-list-nav" aria-label="Saved lists">
+                <a href="inventory.html">Inventory</a>
+                <a class="active" href="wishlist.html" aria-current="page">Wishlist</a>
+                <a href="collections.html">Browse items</a>
+            </nav>
+            <section class="saved-list-panel" aria-labelledby="list-title">
+                <div class="saved-list-heading">
+                    <div>
+                        <h2 id="list-title">Wishlist</h2>
+                        <p id="list-count" aria-live="polite">Loading items...</p>
+                    </div>
+                    <label class="saved-list-search" for="item-search">
+                        <span>Search wishlist</span>
+                        <input id="item-search" type="search" placeholder="Search by item name" disabled>
+                    </label>
+                </div>
+                <p id="list-status" class="saved-list-status" role="status" aria-live="polite">Loading your wishlist...</p>
+                <p id="empty-state" class="saved-list-empty" hidden></p>
+                <div id="items" class="items"></div>
+                <div class="pagination" id="pagination" hidden>
+                    <a href="#" id="prev">Previous</a>
+                    <span id="page-numbers"></span>
+                    <a href="#" id="next">Next</a>
+                </div>
+            </section>
+        </main>
+        <script type="module" src="auth.js"></script>
+    </body>
+</html>
