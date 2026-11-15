@@ -147,7 +147,7 @@ function renderOffers() {
         } else if (offer.status === "completed") {
             const note = document.createElement("p");
             note.className = "offer-completion-note";
-            note.textContent = "Both traders confirmed the exchange.";
+            note.textContent = "Both traders confirmed. Inventory was updated and fulfilled wishlist items were removed.";
             article.append(note);
         }
 
