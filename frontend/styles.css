@@ -507,7 +507,7 @@ main > nav.card {
     width: fit-content;
     max-width: 100%;
     box-sizing: border-box;
-    padding: 8px;
+    padding: 20px;
     margin-bottom: 24px;
     border: 2px dashed #a8c8dc;
     border-radius: 100px;
@@ -516,6 +516,12 @@ main > nav.card {
 }
 
 .site-nav a {
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    white-space: nowrap;
     padding: 10px 18px;
     border: 1px solid #e8bec8;
     border-radius: 100px;
@@ -586,7 +592,7 @@ main > nav.card {
 }
 
 .saved-list-search input {
-    min-height: 42px;
+    min-height: 44px;
     box-sizing: border-box;
     border: 1px solid #b9a7a5;
     border-radius: 6px;
@@ -613,7 +619,7 @@ main > nav.card {
 }
 
 .catalog-search input {
-    min-height: 42px;
+    min-height: 44px;
     width: 100%;
     min-width: 0;
     box-sizing: border-box;
@@ -666,13 +672,56 @@ main > nav.card {
 }
 
 .matches-panel {
-    --match-ink: #3d5260;
-    --match-border: #b8d0d7;
+    --quilt-base: #dceefa;
+    --quilt-patch-light: #eef8ff;
+    --quilt-patch-dark: #cce3f3;
+    --quilt-thread: #fff9fa;
+    --quilt-accent: #7baac8;
+    --quilt-ink: #42677f;
+    --match-ink: var(--quilt-ink);
+    --match-border: var(--quilt-accent);
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
     padding: 24px;
-    border: 2px solid var(--match-border);
+    border: 3px dashed var(--quilt-thread);
     border-radius: 8px;
-    background: rgba(242, 250, 249, 0.96);
-    box-shadow: 0 10px 24px rgba(61, 82, 96, 0.1);
+    background: var(--quilt-base);
+    box-shadow: 0 0 0 5px rgba(255, 255, 255, 0.62), 0 12px 28px rgba(66, 103, 127, 0.18);
+}
+
+.matches-panel::before,
+.matches-panel::after,
+.offer-dialog::before,
+.offer-dialog::after {
+    content: "";
+    position: absolute;
+    pointer-events: none;
+    z-index: 0;
+}
+
+.matches-panel::before,
+.offer-dialog::before {
+    inset: 12px;
+    border-radius: 4px;
+    opacity: 0.75;
+    background:
+        linear-gradient(90deg, transparent calc(100% - 1px), rgba(255, 255, 255, 0.62) 0) 0 0 / 76px 76px,
+        linear-gradient(transparent calc(100% - 1px), rgba(255, 255, 255, 0.62) 0) 0 0 / 76px 76px,
+        repeating-conic-gradient(var(--quilt-patch-light) 0% 25%, var(--quilt-patch-dark) 0% 50%) 0 0 / 76px 76px;
+}
+
+.matches-panel::after,
+.offer-dialog::after {
+    inset: 8px;
+    border: 1px dashed var(--quilt-thread);
+    border-radius: 6px;
+}
+
+.matches-panel > *,
+.offer-dialog form {
+    position: relative;
+    z-index: 1;
 }
 
 .matches-heading {
@@ -688,15 +737,21 @@ main > nav.card {
 }
 
 .matches-refresh {
-    min-height: 42px;
+    min-height: 44px;
     padding: 8px 18px;
-    border: 1px solid #9ab9bf;
-    border-radius: 6px;
+    border: 1px solid var(--match-border);
+    border-radius: 8px;
     color: var(--match-ink);
-    background: #fff;
+    background: #f7fbff;
     font: inherit;
     font-weight: 700;
     cursor: pointer;
+    box-shadow: 0 2px 0 rgba(123, 170, 200, 0.4);
+}
+
+.matches-refresh:hover {
+    background: #fff;
+    transform: translateY(-1px);
 }
 
 .matches-refresh:disabled {
@@ -705,7 +760,7 @@ main > nav.card {
 }
 
 .matches-refresh:focus-visible {
-    outline: 3px solid #397681;
+    outline: 3px solid #42677f;
     outline-offset: 3px;
 }
 
@@ -718,6 +773,10 @@ main > nav.card {
     display: none;
 }
 
+.matches-panel .login-prompt-link {
+    color: var(--match-ink);
+}
+
 .matches-list {
     display: grid;
     gap: 16px;
@@ -725,11 +784,20 @@ main > nav.card {
 }
 
 .trade-match {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
     min-width: 0;
     padding: 18px;
-    border: 1px solid var(--match-border);
-    border-radius: 6px;
-    background: #fff;
+    border: 2px dashed var(--match-border);
+    border-radius: 8px;
+    background: #eef8ff;
+    box-shadow: 0 4px 12px rgba(66, 103, 127, 0.1);
+}
+
+.trade-match > * {
+    position: relative;
+    z-index: 1;
 }
 
 .trade-match h3 {
@@ -747,15 +815,16 @@ main > nav.card {
 .match-side {
     min-width: 0;
     padding: 12px;
-    border-radius: 4px;
+    border: 1px dashed rgba(123, 170, 200, 0.75);
+    border-radius: 6px;
 }
 
 .match-side-wants {
-    background: #fff3f0;
+    background: #dceefa;
 }
 
 .match-side-offers {
-    background: #eef7f2;
+    background: #f7fbff;
 }
 
 .match-side h4 {
@@ -802,19 +871,30 @@ main > nav.card {
 }
 
 .offer-dialog {
+    --quilt-base: #dceefa;
+    --quilt-patch-light: #eef8ff;
+    --quilt-patch-dark: #cce3f3;
+    --quilt-thread: #fff9fa;
+    --quilt-accent: #7baac8;
+    --quilt-ink: #42677f;
+    --match-ink: var(--quilt-ink);
+    --match-border: var(--quilt-accent);
+    position: relative;
+    isolation: isolate;
     width: min(680px, calc(100vw - 32px));
     max-height: min(84vh, 760px);
     box-sizing: border-box;
     overflow: auto;
     padding: 24px;
-    border: 2px solid #b8d0d7;
+    border: 3px dashed var(--quilt-thread);
     border-radius: 8px;
-    color: #3d5260;
-    background: #f7fbfa;
+    color: var(--quilt-ink);
+    background: var(--quilt-base);
+    box-shadow: 0 0 0 5px rgba(255, 255, 255, 0.62), 0 16px 48px rgba(66, 103, 127, 0.28);
 }
 
 .offer-dialog::backdrop {
-    background: rgba(37, 51, 60, 0.46);
+    background: rgba(44, 71, 91, 0.48);
 }
 
 .offer-dialog h2 {
@@ -834,8 +914,9 @@ main > nav.card {
     overflow: auto;
     margin: 0;
     padding: 12px;
-    border: 1px solid #c8d8dc;
+    border: 1px dashed var(--match-border);
     border-radius: 6px;
+    background: rgba(238, 248, 255, 0.82);
 }
 
 .offer-choice-group legend {
@@ -850,6 +931,7 @@ main > nav.card {
     gap: 10px;
     min-height: 48px;
     padding: 4px 8px;
+    border: 1px solid #cce3f3;
     border-radius: 4px;
     background: #fff;
     cursor: pointer;
@@ -859,7 +941,7 @@ main > nav.card {
     width: 18px;
     height: 18px;
     margin: 0;
-    accent-color: #397681;
+    accent-color: #42677f;
 }
 
 .offer-choice img {
@@ -895,7 +977,7 @@ main > nav.card {
 .offer-dialog select,
 .offer-dialog input[type="text"] {
     width: 100%;
-    min-height: 42px;
+    min-height: 44px;
     box-sizing: border-box;
     padding: 8px 10px;
     border: 1px solid #b9a7a5;
@@ -906,7 +988,7 @@ main > nav.card {
 
 .offer-privacy-note {
     margin: 6px 0 12px;
-    color: #596973;
+    color: #42677f;
     font-size: 0.9rem;
 }
 
@@ -924,19 +1006,19 @@ main > nav.card {
 }
 
 .offer-action {
-    min-height: 40px;
+    min-height: 44px;
     padding: 8px 14px;
-    border: 1px solid #9ab9bf;
+    border: 1px solid var(--match-border);
     border-radius: 6px;
-    color: #3d5260;
-    background: #fff;
+    color: var(--match-ink);
+    background: #f7fbff;
     font: inherit;
     font-weight: 700;
     cursor: pointer;
 }
 
 .offer-action:hover {
-    background: #eef7f6;
+    background: #e4f2fb;
 }
 
 .offer-action:disabled {
@@ -946,12 +1028,12 @@ main > nav.card {
 
 .offer-action-primary {
     color: #fff;
-    border-color: #397681;
-    background: #397681;
+    border-color: #42677f;
+    background: #42677f;
 }
 
 .offer-action-primary:hover {
-    background: #2f6570;
+    background: #34566b;
 }
 
 .offer-tabs {
@@ -961,17 +1043,17 @@ main > nav.card {
     max-width: 100%;
     margin-top: 14px;
     padding: 4px;
-    border: 1px solid #b8d0d7;
+    border: 1px dashed var(--match-border);
     border-radius: 6px;
-    background: #e8f1f0;
+    background: #cce3f3;
 }
 
 .offer-tab {
-    min-height: 40px;
+    min-height: 44px;
     padding: 8px 16px;
     border: 0;
     border-radius: 4px;
-    color: #3d5260;
+    color: var(--match-ink);
     background: transparent;
     font: inherit;
     font-weight: 700;
@@ -979,8 +1061,8 @@ main > nav.card {
 }
 
 .offer-tab.active {
-    background: #fff;
-    box-shadow: 0 1px 4px rgba(61, 82, 96, 0.16);
+    background: #f7fbff;
+    box-shadow: inset 0 0 0 1px #fff, 0 2px 5px rgba(66, 103, 127, 0.18);
 }
 
 .offer-status {
@@ -1045,6 +1127,7 @@ main > nav.card {
 }
 
 .tab-links {
+    min-height: 44px;
     cursor: pointer;
     border: none;
     font-size: 1.05em;
@@ -1088,8 +1171,8 @@ main > nav.card {
     border: none;
     border-radius: 50%;
     cursor: pointer;
-    height: 40px;
-    width: 40px;
+    height: 44px;
+    width: 44px;
     display: block;
     position: relative;
 }
@@ -1105,7 +1188,7 @@ main > nav.card {
     background: #d29599;
     content: "";
     position: absolute;
-    left: 8px;
+    left: 10px;
     top: 10px;
 }
 
@@ -1117,7 +1200,7 @@ main > nav.card {
     content: "";
     opacity: 0;
     position: absolute;
-    left: 8px;
+    left: 10px;
     top: 10px;
     transition: opacity 0.2s ease;
 }
@@ -1145,8 +1228,8 @@ main > nav.card {
     border: none;
     border-radius: 50%;
     cursor: pointer;
-    height: 40px;
-    width: 40px;
+    height: 44px;
+    width: 44px;
     display: block;
     position: relative;
 }
@@ -1162,8 +1245,8 @@ main > nav.card {
     background: #6D919A;
     content: "";
     position: absolute;
-    left: 8px;
-    top: 8px;
+    left: 10px;
+    top: 10px;
     opacity: 1;
     transition: opacity 0.2s ease;
 }
@@ -1183,7 +1266,7 @@ main > nav.card {
     content: "";
     opacity: 0;
     position: absolute;
-    left: 8px;
+    left: 10px;
     top: 10px;
     transition: opacity 0.2s ease;
 }
@@ -1407,5 +1490,19 @@ main > nav.card {
 
     .tab-links {
         flex-basis: calc(50% - 8px);
+    }
+}
+
+@media (max-width: 320px) {
+    .site-nav {
+        width: 100%;
+        flex-direction: column;
+        align-items: center;
+        padding: 14px;
+    }
+
+    .site-nav a {
+        width: fit-content;
+        max-width: 100%;
     }
 }
