@@ -1,4 +1,4 @@
-import { redirectToLogin, requireAuthenticatedUser } from "./oidc-client.js";
+import { AuthenticationRequiredError, renderLoginPrompt, requireAuthenticatedUser } from "./oidc-client.js";
 
 const apiBaseUrl = new URL("https://webkinz-trading-hub.onrender.com");
 const collections = [
@@ -23,8 +23,7 @@ async function requestApi(path, options = {}) {
     if (options.body) headers["Content-Type"] = "application/json";
     const response = await fetch(new URL(path, apiBaseUrl), { ...options, headers });
     if (response.status === 401) {
-        await redirectToLogin();
-        throw new Error("Redirecting to sign in.");
+        throw new AuthenticationRequiredError();
     }
     const result = await response.json().catch(() => ({}));
     if (!response.ok) throw new Error(result.error || "Trade offers are unavailable.");
@@ -174,7 +173,11 @@ function createAction(label, action, offerId) {
             });
             await loadOffers();
         } catch (error) {
-            statusMessage.textContent = error.message;
+            if (error instanceof AuthenticationRequiredError) {
+                renderLoginPrompt(statusMessage, "Log in to manage your trade offers. ");
+            } else {
+                statusMessage.textContent = error.message;
+            }
             button.disabled = false;
         }
     });
@@ -197,7 +200,11 @@ async function initialize() {
         renderOffers();
     } catch (error) {
         offersCount.textContent = "Offers unavailable";
-        statusMessage.textContent = error.message;
+        if (error instanceof AuthenticationRequiredError) {
+            renderLoginPrompt(statusMessage, "Log in to view your trade offers. ");
+        } else {
+            statusMessage.textContent = error.message;
+        }
     } finally {
         refreshButton.disabled = false;
     }

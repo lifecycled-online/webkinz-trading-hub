@@ -23,8 +23,31 @@ export function redirectToLogin(loginHint) {
 export async function requireAuthenticatedUser() {
     const user = await userManager.getUser();
     if (!user || user.expired || !user.access_token) {
-        await redirectToLogin();
-        throw new Error("Redirecting to sign in.");
+        throw new AuthenticationRequiredError();
     }
     return user;
+}
+
+export class AuthenticationRequiredError extends Error {
+    constructor() {
+        super("Authentication is required.");
+        this.name = "AuthenticationRequiredError";
+    }
+}
+
+export function renderLoginPrompt(container, message) {
+    const loginLink = document.createElement("a");
+    loginLink.className = "login-prompt-link";
+    loginLink.href = "#login";
+    loginLink.textContent = "Log in";
+    loginLink.addEventListener("click", async (event) => {
+        event.preventDefault();
+        try {
+            await redirectToLogin();
+        } catch (error) {
+            console.error("Unable to start SSO sign-in:", error);
+            loginLink.textContent = "Sign-in could not be started. Try again.";
+        }
+    });
+    container.replaceChildren(document.createTextNode(message), loginLink);
 }
