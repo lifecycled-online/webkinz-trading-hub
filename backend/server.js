@@ -27,10 +27,10 @@ const contentTypes = new Map([
     [".svg", "image/svg+xml"],
     [".webp", "image/webp"],
 ]);
-const allowedOrigins = new Set((process.env.CORS_ORIGINS ?? "http://localhost:3001,http://127.0.0.1:3001")
-    .split(",")
-    .map((origin) => origin.trim())
-    .filter(Boolean));
+const allowedOrigins = new Set([
+    "https://lifecycled-online.github.io",
+    ...(process.env.CORS_ORIGINS ?? "http://localhost:3001,http://127.0.0.1:3001").split(","),
+].map((origin) => origin.trim()).filter(Boolean));
 let userInfoEndpointPromise;
 
 if (!databaseUrl) {
