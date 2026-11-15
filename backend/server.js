@@ -13,6 +13,7 @@ const databaseConnectionUrl = databaseUrl ? new URL(databaseUrl) : null;
 databaseConnectionUrl?.searchParams.delete("sslmode");
 const oidcIssuer = new URL(process.env.OIDC_ISSUER_URL ?? "https://webkinz-trading-hub-dev.auth.ssojet.com/");
 const validListTypes = new Set(["inventory", "wishlist"]);
+const validContactMethods = new Set(["discord", "email", "other"]);
 const projectRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const frontendRoot = resolve(projectRoot, "frontend");
 const dataRoot = resolve(projectRoot, "data");
@@ -277,7 +278,9 @@ const server = createServer(async (request, response) => {
 
             const result = await pool.query(
                 `SELECT offers.id, offers.sender_subject, offers.recipient_subject,
-                        offers.message, offers.status, offers.created_at,
+                    offers.message, offers.status, offers.created_at,
+                    offers.contact_method, offers.contact_value,
+                    offers.sender_completed_at, offers.recipient_completed_at,
                         offer_items.side, offer_items.item_id
                  FROM public.trade_offers AS offers
                  LEFT JOIN public.trade_offer_items AS offer_items ON offer_items.offer_id = offers.id
@@ -299,6 +302,11 @@ const server = createServer(async (request, response) => {
                         message: row.message,
                         status: row.status,
                         createdAt: row.created_at,
+                        contact: (row.sender_subject === user.sub || ["accepted", "completed"].includes(row.status)) && row.contact_value
+                            ? { method: row.contact_method, value: row.contact_value }
+                            : null,
+                        senderCompletedAt: row.sender_completed_at,
+                        recipientCompletedAt: row.recipient_completed_at,
                         offeringItems: [],
                         requestingItems: [],
                     };
@@ -339,9 +347,15 @@ const server = createServer(async (request, response) => {
             const requestingItems = body && typeof body === "object" && !Array.isArray(body)
                 ? parseTradeItemIds(body.requestingItems)
                 : null;
+            const contactValue = typeof body?.contactValue === "string" ? body.contactValue.trim() : "";
             if (!offeringItems || !requestingItems
                 || typeof body.recipientTraderId !== "string"
                 || !/^[a-f0-9]{64}$/.test(body.recipientTraderId)
+                || !validContactMethods.has(body.contactMethod)
+                || contactValue.length < 1
+                || contactValue.length > 200
+                || /[\u0000-\u001f]/.test(contactValue)
+                || (body.contactMethod === "email" && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contactValue))
                 || (body.message !== undefined && (typeof body.message !== "string" || body.message.length > 500))) {
                 response.writeHead(400);
                 response.end(JSON.stringify({ error: "Invalid trade offer" }));
@@ -388,10 +402,11 @@ const server = createServer(async (request, response) => {
             }
 
             const created = await client.query(
-                `INSERT INTO public.trade_offers (issuer, sender_subject, recipient_subject, message)
-                 VALUES ($1, $2, $3, $4)
+                `INSERT INTO public.trade_offers
+                    (issuer, sender_subject, recipient_subject, message, contact_method, contact_value)
+                 VALUES ($1, $2, $3, $4, $5, $6)
                  RETURNING id, status, created_at`,
-                [user.issuer, user.sub, recipient, (body.message ?? "").trim()],
+                [user.issuer, user.sub, recipient, (body.message ?? "").trim(), body.contactMethod, contactValue],
             );
             const offerId = created.rows[0].id;
             await client.query(
@@ -432,7 +447,7 @@ const server = createServer(async (request, response) => {
 
             const body = await readJsonBody(request);
             if (!body || typeof body !== "object" || Array.isArray(body)
-                || !new Set(["accept", "decline", "withdraw"]).has(body.action)) {
+                || !new Set(["accept", "decline", "withdraw", "complete"]).has(body.action)) {
                 response.writeHead(400);
                 response.end(JSON.stringify({ error: "Invalid offer action" }));
                 return;
@@ -442,7 +457,8 @@ const server = createServer(async (request, response) => {
             await client.query("BEGIN");
             transactionStarted = true;
             const result = await client.query(
-                `SELECT id, sender_subject, recipient_subject, status
+                `SELECT id, sender_subject, recipient_subject, status,
+                    sender_completed_at, recipient_completed_at
                  FROM public.trade_offers
                  WHERE issuer = $1 AND id = $2
                    AND (sender_subject = $3 OR recipient_subject = $3)
@@ -457,6 +473,38 @@ const server = createServer(async (request, response) => {
                 response.end(JSON.stringify({ error: "Offer not found" }));
                 return;
             }
+            const isSender = offer.sender_subject === user.sub;
+            const isRecipient = offer.recipient_subject === user.sub;
+            if (body.action === "complete") {
+                if (offer.status !== "accepted") {
+                    await client.query("ROLLBACK");
+                    transactionStarted = false;
+                    response.writeHead(409);
+                    response.end(JSON.stringify({ error: "Only accepted offers can be marked complete" }));
+                    return;
+                }
+
+                const updated = await client.query(
+                    `UPDATE public.trade_offers
+                     SET sender_completed_at = CASE WHEN $3 THEN COALESCE(sender_completed_at, now()) ELSE sender_completed_at END,
+                         recipient_completed_at = CASE WHEN $4 THEN COALESCE(recipient_completed_at, now()) ELSE recipient_completed_at END,
+                         status = CASE
+                             WHEN (sender_completed_at IS NOT NULL OR $3)
+                              AND (recipient_completed_at IS NOT NULL OR $4) THEN 'completed'
+                             ELSE 'accepted'
+                         END,
+                         updated_at = now()
+                     WHERE issuer = $1 AND id = $2
+                     RETURNING status, sender_completed_at, recipient_completed_at`,
+                    [user.issuer, offer.id, isSender, isRecipient],
+                );
+                await client.query("COMMIT");
+                transactionStarted = false;
+                response.writeHead(200);
+                response.end(JSON.stringify(updated.rows[0]));
+                return;
+            }
+
             if (offer.status !== "pending") {
                 await client.query("ROLLBACK");
                 transactionStarted = false;
@@ -465,8 +513,6 @@ const server = createServer(async (request, response) => {
                 return;
             }
 
-            const isSender = offer.sender_subject === user.sub;
-            const isRecipient = offer.recipient_subject === user.sub;
             if ((body.action === "withdraw" && !isSender) || (body.action !== "withdraw" && !isRecipient)) {
                 await client.query("ROLLBACK");
                 transactionStarted = false;

@@ -55,6 +55,15 @@
                 <div id="offer-item-choices" class="offer-item-choices"></div>
                 <label class="offer-message-label" for="offer-message">Note <span>(optional)</span></label>
                 <textarea id="offer-message" name="message" rows="3" maxlength="500"></textarea>
+                <label class="offer-message-label" for="contact-method">How can they reach you?</label>
+                <select id="contact-method" name="contactMethod" required>
+                    <option value="discord">Discord</option>
+                    <option value="email">Email</option>
+                    <option value="other">Other</option>
+                </select>
+                <label class="offer-message-label" for="contact-value">Contact handle or address</label>
+                <input id="contact-value" name="contactValue" type="text" maxlength="200" autocomplete="off" required>
+                <p class="offer-privacy-note">This is shared with the recipient only after they accept.</p>
                 <p id="offer-compose-status" role="alert" aria-live="polite"></p>
                 <div class="offer-dialog-actions">
                     <button id="cancel-offer" class="offer-action" type="button">Cancel</button>
