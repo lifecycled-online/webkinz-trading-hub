@@ -1,0 +1,19 @@
+{
+    "sqltools.connections": [
+        {
+            "pgOptions": {
+                "ssl": {
+                    "rejectUnauthorized": false
+                }
+            },
+            "ssh": "Disabled",
+            "previewLimit": 50,
+            "server": "kiy88u6ap3.qshtt1m3nx.tsdb.cloud.timescale.com",
+            "port": 34557,
+            "driver": "PostgreSQL",
+            "name": "webkinz-hub",
+            "database": "tsdb",
+            "username": "tsdbadmin"
+        }
+    ]
+}
