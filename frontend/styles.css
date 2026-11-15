@@ -12,7 +12,7 @@ body {
     position: relative;
 }
 
-.site-background-pets {
+.site-background-items {
     position: fixed;
     inset: 0;
     overflow: hidden;
@@ -20,27 +20,42 @@ body {
     z-index: -1;
 }
 
-.site-pet {
+.site-item {
     position: absolute;
-    width: clamp(80px, 12vw, 150px);
+    width: clamp(72px, 10vw, 128px);
     height: auto;
-    opacity: 0.18;
+    opacity: 0.14;
     filter: drop-shadow(0 5px 12px rgba(167, 107, 126, 0.2));
 }
 
-.site-pet-yellow {
+.item-blue-one {
     top: 34vh;
     left: 1vw;
 }
 
-.site-pet-blue {
-    top: 63vh;
+.item-blue-two {
+    top: 77vh;
     right: 1vw;
 }
 
-.site-pet-pink {
-    top: 86vh;
-    left: 3vw;
+.item-pink-one {
+    top: 52vh;
+    right: 2vw;
+}
+
+.item-pink-two {
+    top: 91vh;
+    left: 2vw;
+}
+
+.item-yellow-one {
+    top: 68vh;
+    left: 1vw;
+}
+
+.item-yellow-two {
+    top: 22vh;
+    right: 2vw;
 }
 
 header {
