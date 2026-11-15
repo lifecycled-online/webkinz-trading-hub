@@ -5,7 +5,6 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
         <title>Webkinz Trading Hub</title> 
         <link rel="stylesheet" href="styles.css">
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/oidc-client-ts/2.2.5/browser/oidc-client-ts.min.js"></script>
     </head> 
     <body> 
         <div class="site-background-items" aria-hidden="true">
@@ -28,8 +27,8 @@
                 <h2>A place to organize trades, keep track of your inventory, and create a wishlist.</h2>
             </div>
             <div id="accountButtons">
-                <button id="loginButton" class="headerButton">Login</button>
-                <button id="registerButton" class="headerButton">Register</button>
+                <button id="loginButton" class="headerButton" type="button">Login</button>
+                <button id="registerButton" class="headerButton" type="button">Register</button>
             </div>
         </header>
         <main>
@@ -49,19 +48,6 @@
             </div>
         </main>
 
-        <!-- temp auth -->
-        <div id="app">
-            <div id="profile" style="display: none;">
-                <h2>User Profile</h2>
-                <pre id="profile-data"></pre>
-                <button onclick="logout()">Logout</button>
-            </div>
-            <div id="login" style="display: none;">
-                <h2>Welcome to OIDC Demo</h2>
-                <button onclick="login()">login</button>
-            </div>
-        </div>
-        <script src="config.js"></script>
-        <script src="auth.js"></script>
+        <script type="module" src="auth.js"></script>
     </body> 
 </html>

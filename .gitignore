@@ -3,6 +3,9 @@
 .env.*
 !.env.example
 
+# Node dependencies
+node_modules/
+
 # Private keys
 *.pem
 *.key

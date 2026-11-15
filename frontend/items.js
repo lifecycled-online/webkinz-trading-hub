@@ -1,3 +1,5 @@
+import { createItemListControls, loadItemLists } from "./item-lists.js";
+
 const params = new URLSearchParams(window.location.search);
 
 const collection = params.get("collection");
@@ -39,6 +41,13 @@ async function loadCategory() {
         }
 
         const items = await itemsResponse.json();
+        let lists = null;
+        try {
+            lists = await loadItemLists();
+        } catch (error) {
+            console.error("Unable to load saved item lists:", error.message);
+        }
+
         items.forEach(item => {
             if (item.is_tradeable) {
                 const card = document.createElement("div");
@@ -49,46 +58,9 @@ async function loadCategory() {
                 const caption = document.createElement("p");
                 caption.textContent = item.title;
 
-                const buttonContainer = document.createElement("div");
-                buttonContainer.className = "button-container";
-
-                /* button html structure:
-                    <div class="wishlist-button">
-                        <input type="checkbox" id="wishlist-button" />
-                        <label for="wishlist-button"></label>
-                    </div>
-                    <div class="inventory-button">
-                        <input type="checkbox" id="inventory-button" />
-                        <label for="inventory-button"></label>
-                    </div>
-                */  
-
-                const wishlistButtonContainer = document.createElement("div");
-                wishlistButtonContainer.className = "wishlist-button";
-                const wishlistButton = document.createElement("input");
-                wishlistButton.type = "checkbox";
-                wishlistButton.id = `wishlist-${item.id}`;
-                const wishlistLabel = document.createElement("label");
-                wishlistLabel.setAttribute("for", wishlistButton.id);
-                wishlistButtonContainer.appendChild(wishlistButton);
-                wishlistButtonContainer.appendChild(wishlistLabel);
-
-                const inventoryButtonContainer = document.createElement("div");
-                inventoryButtonContainer.className = "inventory-button";
-                const inventoryButton = document.createElement("input");
-                inventoryButton.type = "checkbox";
-                inventoryButton.id = `inventory-${item.id}`;
-                const inventoryLabel = document.createElement("label");
-                inventoryLabel.setAttribute("for", inventoryButton.id);
-                inventoryButtonContainer.appendChild(inventoryButton);
-                inventoryButtonContainer.appendChild(inventoryLabel);
-
-                buttonContainer.appendChild(wishlistButtonContainer);
-                buttonContainer.appendChild(inventoryButtonContainer);
-
                 card.appendChild(img);
                 card.appendChild(caption);
-                card.appendChild(buttonContainer);
+                card.appendChild(createItemListControls(item, lists));
 
                 container.appendChild(card);
             }

@@ -1,3 +1,5 @@
+import { createItemListControls, loadItemLists } from "./item-lists.js";
+
 const collections = [
     { name: "color", file: "data/collections/color-collections.json" },
     { name: "misc", file: "data/collections/misc-collections.json" },
@@ -35,11 +37,19 @@ async function loadAllItems() {
         tradeableItems.sort((a, b) => a.title.localeCompare(b.title));
         itemCount = tradeableItems.length;
 
+        try {
+            itemLists = await loadItemLists();
+        } catch (error) {
+            console.error("Unable to load saved item lists:", error.message);
+        }
+
         displayItems(tradeableItems);
     } catch (error) {
         console.error("Error loading all items:", error);
     }
 }
+
+let itemLists = null;
 
 function displayItems(items) {
     const container = document.getElementById("items");
@@ -58,35 +68,9 @@ function displayItems(items) {
         const caption = document.createElement("p");
         caption.textContent = item.title;
 
-        const buttonContainer = document.createElement("div");
-        buttonContainer.className = "button-container";
-
-        const wishlistButtonContainer = document.createElement("div");
-        wishlistButtonContainer.className = "wishlist-button";
-        const wishlistButton = document.createElement("input");
-        wishlistButton.type = "checkbox";
-        wishlistButton.id = `wishlist-${item.id}`;
-        const wishlistLabel = document.createElement("label");
-        wishlistLabel.setAttribute("for", wishlistButton.id);
-        wishlistButtonContainer.appendChild(wishlistButton);
-        wishlistButtonContainer.appendChild(wishlistLabel);
-
-        const inventoryButtonContainer = document.createElement("div");
-        inventoryButtonContainer.className = "inventory-button";
-        const inventoryButton = document.createElement("input");
-        inventoryButton.type = "checkbox";
-        inventoryButton.id = `inventory-${item.id}`;
-        const inventoryLabel = document.createElement("label");
-        inventoryLabel.setAttribute("for", inventoryButton.id);
-        inventoryButtonContainer.appendChild(inventoryButton);
-        inventoryButtonContainer.appendChild(inventoryLabel);
-
-        buttonContainer.appendChild(wishlistButtonContainer);
-        buttonContainer.appendChild(inventoryButtonContainer);
-
         card.appendChild(img);
         card.appendChild(caption);
-        card.appendChild(buttonContainer);
+        card.appendChild(createItemListControls(item, itemLists));
 
         container.appendChild(card);
     });
