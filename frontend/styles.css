@@ -144,7 +144,11 @@ header {
 }
 
 main {
-    margin: 50px;
+    margin: clamp(16px, 4vw, 50px);
+}
+
+main > nav.card {
+    margin-bottom: 60px;
 }
 
 .headerButton {
@@ -598,29 +602,172 @@ main {
     justify-content: space-around;
 }
 
-@media (max-width: 700px) {
+@media (max-width: 760px) {
     header {
-        align-items: flex-start;
         flex-direction: column;
-        gap: 10px;
-        padding: 12px 24px 28px;
+        align-items: center;
+        gap: 12px;
+        padding: 18px 20px 22px;
+        text-align: center;
+    }
+
+    .pageTitle {
+        max-width: 100%;
     }
 
     .pageTitle h1 {
-        font-size: clamp(1.7rem, 8vw, 2.4rem);
+        margin: 0;
+        font-size: clamp(1.25rem, 5vw, 2rem);
+    }
+
+    .pageTitle h1 a.site-logo {
+        gap: 0.3em;
+    }
+
+    .site-logo-mark {
+        width: clamp(36px, 8vw, 50px);
     }
 
     .pageTitle h2 {
-        font-size: 1rem;
+        max-width: 40rem;
+        margin: 0.5em auto 0;
     }
 
     #accountButtons {
-        align-self: flex-end;
+        align-self: center;
         display: flex;
-        gap: 20px;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 12px;
     }
 
     .headerButton {
-        width: 110px;
+        width: min(140px, calc(50vw - 28px));
+        height: 48px;
+        font-size: 1rem;
+    }
+
+    main {
+        margin: 16px;
+    }
+
+    main > .card,
+    main > nav.card {
+        box-sizing: border-box;
+        width: 100%;
+        min-width: 0;
+        max-width: 100%;
+        padding: 1.25rem;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    main > nav.card {
+        margin-bottom: 28px;
+    }
+
+    .cards {
+        gap: 18px;
+    }
+
+    .cards .card {
+        box-sizing: border-box;
+        width: 100%;
+        min-width: 0;
+        max-width: 100%;
+        margin: 0;
+        padding: 1.25rem clamp(1rem, 4vw, 1.5rem);
+    }
+
+    .tabs {
+        box-sizing: border-box;
+        max-width: 100%;
+        padding: 8px;
+        border-radius: 22px;
+        gap: 8px;
+    }
+
+    .tab-links {
+        flex: 1 1 100px;
+        min-width: 0;
+        padding: 0.65em 0.8em;
+        font-size: 1rem;
+    }
+
+    .items {
+        gap: 12px;
+    }
+
+    .items .item-card {
+        box-sizing: border-box;
+        flex: 1 1 120px;
+        min-width: 0;
+        max-width: calc(50% - 6px);
+    }
+
+    .items img {
+        display: block;
+        width: auto;
+        max-width: 100%;
+        max-height: 150px;
+        height: auto;
+        object-fit: contain;
+        padding-top: 12px;
+        margin: 0 auto;
+    }
+
+    .item-card p {
+        height: auto;
+        min-height: 2.5em;
+        overflow-wrap: anywhere;
+    }
+
+    .button-container {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .pagination {
+        box-sizing: border-box;
+        width: 100%;
+        max-width: 100%;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        padding: 20px 0 8px;
+    }
+
+    .site-item {
+        width: clamp(32px, 9vw, 48px);
+        opacity: 0.08;
+    }
+}
+
+@media (max-width: 420px) {
+    header {
+        padding-right: 12px;
+        padding-left: 12px;
+    }
+
+    .headerButton {
+        width: min(140px, calc(50vw - 24px));
+    }
+
+    main {
+        margin: 12px;
+    }
+
+    main > .card,
+    main > nav.card {
+        padding: 1rem;
+    }
+
+    .cards .card {
+        padding: 1.15rem 1rem;
+    }
+
+    .tab-links {
+        flex-basis: calc(50% - 8px);
     }
 }
