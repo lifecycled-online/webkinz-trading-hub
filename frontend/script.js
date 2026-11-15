@@ -17,29 +17,49 @@ function openCollection(evt, collectiontype) {
     evt.currentTarget.className += " active";
 }
 
-function loadCollection(jsonFile, collectiontype) {
-    fetch(jsonFile)
-        .then(response => response.json())
-        .then(items => {
-            const collection = document.querySelector(`#${collectiontype} .items`);
-            items.forEach(item => {
-                const card = document.createElement("a");
-                card.className = "item-card";
-                card.href = `items.html?collection=${collectiontype}&category=${item.id}`;
+async function loadCollection(jsonFile, collectiontype) {
+    try {
+        const response = await fetch(jsonFile);
+        if (!response.ok) {
+            throw new Error(`Collection request failed with status ${response.status}`);
+        }
 
-                const img = document.createElement("img");
-                img.src = item.image_url;
-                img.alt = item.title;
+        const categories = await response.json();
+        const visibleCategories = await Promise.all(categories.map(async category => {
+            try {
+                const itemResponse = await fetch(`data/items/${collectiontype}-items/${category.id}-items.json`);
+                if (!itemResponse.ok) {
+                    throw new Error(`Items request failed with status ${itemResponse.status}`);
+                }
 
-                const caption = document.createElement("p");
-                caption.textContent = item.title;
-                
-                card.appendChild(img);
-                card.appendChild(caption);
-                collection.appendChild(card);
-            });
-        })
-    .catch(error => console.error(`Error loading collection: ${jsonFile}`, error));
+                const items = await itemResponse.json();
+                return items.some(item => item.is_tradeable === true) ? category : null;
+            } catch (error) {
+                console.error(`Error checking category items: ${category.id}`, error);
+                return null;
+            }
+        }));
+
+        const collection = document.querySelector(`#${collectiontype} .items`);
+        visibleCategories.filter(Boolean).forEach(item => {
+            const card = document.createElement("a");
+            card.className = "item-card";
+            card.href = `items.html?collection=${collectiontype}&category=${item.id}`;
+
+            const img = document.createElement("img");
+            img.src = item.image_url;
+            img.alt = item.title;
+
+            const caption = document.createElement("p");
+            caption.textContent = item.title;
+
+            card.appendChild(img);
+            card.appendChild(caption);
+            collection.appendChild(card);
+        });
+    } catch (error) {
+        console.error(`Error loading collection: ${jsonFile}`, error);
+    }
 }
 
 loadCollection('data/collections/type-collections.json', 'type');
